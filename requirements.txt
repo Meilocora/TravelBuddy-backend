@@ -1,67 +1,26 @@
-aiohttp            ~=3.10.11
-aiohttp-retry      ~=2.8.3
-aiosignal          ~=1.3.1
-attrs              ~=23.2.0
-bcrypt             ~=4.2.1
-blinker            ~=1.7.0
-Bootstrap-Flask    ~=2.4.1
-certifi            ~=2024.7.4
-cffi               ~=1.17.1
-charset-normalizer ~=3.3.2
-click              ~=8.1.7
-colorama           ~=0.4.6
-cors               ~=1.0.1
-country_list       ~=1.1.0
-countryinfo        ~=0.1.2
-CurrencyConverter  ~=0.18.7
-filelock           ~=3.16.1
-Flask              ~=3.0.3
-Flask-CKEditor     ~=0.4.6
-Flask-Cors         ~=5.0.0
-Flask-Gravatar     ~=0.5.0
-Flask-Login        ~=0.6.3
-Flask-SQLAlchemy   ~=3.1.1
-Flask-WTF          ~=1.2.1
-frozenlist         ~=1.4.1
-future             ~=1.0.0
-geographiclib      ~=2.0
-geopy              ~=2.4.1
-gevent             ~=24.2.1
-greenlet           ~=3.1.1
-gunicorn           ~=23.0.0
-h3                 ~=4.2.2
-html5              ~=0.0.9
-idna               ~=3.7
-itsdangerous       ~=2.1.2
-Jinja2             ~=3.1.3
-MarkupSafe         ~=2.1.4
-multidict          ~=6.0.5
-numpy              ~=1.26.4
-packaging          ~=23.2
-pillow             ~=10.4.0
-pip                ~=24.3.1
-prettytable        ~=3.10.0
-psycopg2-binary    ~=2.9.9
-pycountry          ~=24.6.1
-pycparser          ~=2.22
-PyJWT              ~=2.8.0
-PySocks            ~=1.7.1
-python-dotenv      ~=1.0.1
-pytz               ~=2025.2
-requests           ~=2.32.4
-requests-file      ~=2.1.0
-scipy              ~=1.14.0
-six                ~=1.16.0
-SQLAlchemy         ~=2.0.25
-timezonefinder     ~=6.5.9
-tldextract         ~=5.1.2
-typing_extensions  ~=4.9.0
-urllib3            ~=2.5.0
-wcwidth            ~=0.2.13
-webcolors          ~=1.13
-webencodings       ~=0.5.1
-Werkzeug           ~=3.0.0
-WTForms            ~=3.0.1
-yarl               ~=1.12.0
-zope.event         ~=5.0
-zope.interface     ~=7.1.1
+# Core Flask framework
+Flask~=3.0.3
+Flask-SQLAlchemy~=3.1.1
+Flask-Cors~=5.0.0
+SQLAlchemy~=2.0.25
+
+# Database
+psycopg2-binary~=2.9.9
+
+# Authentication & Security
+bcrypt~=4.2.1
+PyJWT~=2.8.0
+python-dotenv~=1.0.1
+
+# Geographic & Travel Features
+geopy~=2.4.1
+countryinfo~=0.1.2
+CurrencyConverter~=0.18.7
+timezonefinder~=6.5.9
+pytz~=2025.2
+
+# Deployment
+gunicorn~=23.0.0
+
+# Development/Optional
+Werkzeug~=3.0.0
