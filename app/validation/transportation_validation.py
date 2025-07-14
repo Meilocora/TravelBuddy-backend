@@ -1,7 +1,21 @@
 import locale
 from app.validation.validation import Validation
 
-locale.setlocale(locale.LC_ALL, 'de_DE.UTF-8')
+# Set German locale with fallback for different operating systems
+try:
+    # Try Windows German locale first
+    locale.setlocale(locale.LC_ALL, 'German_Germany.1252')
+except locale.Error:
+    try:
+        # Try Unix/Linux German locale
+        locale.setlocale(locale.LC_ALL, 'de_DE.UTF-8')
+    except locale.Error:
+        try:
+            # Try shorter German locale
+            locale.setlocale(locale.LC_ALL, 'de_DE')
+        except locale.Error:
+            # Fall back to system default
+            locale.setlocale(locale.LC_ALL, '')
 
 class TransportationValidation(Validation):
   def __init__(self):
