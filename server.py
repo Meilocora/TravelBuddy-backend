@@ -47,7 +47,6 @@ with app.app_context():
     
 
 HOST = os.getenv('HOST')
-PORT = os.getenv('PORT')
 
 if __name__ == '__main__':
-    app.run(host=HOST, port=PORT, debug=True)
+    app.run(host=HOST, debug=True)
