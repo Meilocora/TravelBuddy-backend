@@ -45,6 +45,7 @@ class MajorStageValidation(Validation):
             majorStage['additional_info']['errors'].append(f", {title_val}")
             majorStage['additional_info']['isValid'] = False
         
+        # TODO: Das entfernen oder es soll nur eine Warnung geben
         for existing_major_stage in existing_major_stages:
             start_val = MajorStageValidation().check_for_overlap(majorStage['scheduled_start_time']['value'], existing_major_stage.scheduled_start_time, existing_major_stage.scheduled_end_time, existing_major_stage.title)
             if start_val:   
@@ -117,6 +118,7 @@ class MajorStageValidation(Validation):
             majorStage['additional_info']['errors'].append(f", {title_val}")
             majorStage['additional_info']['isValid'] = False
         
+        # TODO: Das entfernen oder es soll nur eine Warnung geben
         for existing_major_stage in existing_major_stages:
             start_val = MajorStageValidation().check_for_overlap(majorStage['scheduled_start_time']['value'], existing_major_stage.scheduled_start_time, existing_major_stage.scheduled_end_time, existing_major_stage.title)
             if start_val:   

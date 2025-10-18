@@ -39,6 +39,7 @@ class MinorStageValidation(Validation):
             minorStage['title']['errors'].append(f", {title_val}")
             minorStage['title']['isValid'] = False
         
+        # TODO: Das entfernen oder es soll nur eine Warnung geben
         for existing_minor_stage in existing_minor_stages:
             start_val = MinorStageValidation().check_for_overlap(minorStage['scheduled_start_time']['value'], existing_minor_stage.scheduled_start_time, existing_minor_stage.scheduled_end_time, existing_minor_stage.title)
             if start_val:   
