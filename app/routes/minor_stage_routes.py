@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, request
 from db import db
 from app.routes.route_protection import token_required
-from app.routes.util import parseDate, formatDateToString, parseDateTime, formatDateTimeToString
+from app.routes.util import get_users_stages_titles, parseDate, formatDateToString, parseDateTime, formatDateTimeToString
 from app.models import Costs, Spendings, MajorStage, MinorStage, Transportation, Accommodation, Activity, PlaceToVisit
 from app.validation.minor_stage_validation import MinorStageValidation
 from app.routes.util import calculate_journey_costs
@@ -16,6 +16,7 @@ def create_minor_stage(current_user, majorStageId):
         minor_stage = request.get_json()
         result = db.session.execute(db.select(MinorStage).filter_by(major_stage_id=majorStageId))
         existing_minor_stages = result.scalars().all()
+        assigned_titles = get_users_stages_titles(current_user)
         
         existing_minor_stages_costs = []
         for stage in existing_minor_stages:
@@ -29,7 +30,7 @@ def create_minor_stage(current_user, majorStageId):
     except:
         return jsonify({'error': 'Unknown error'}, 400) 
     
-    response, isValid = MinorStageValidation.validate_minor_stage(minor_stage, existing_minor_stages, existing_minor_stages_costs, major_stage_costs)  
+    response, isValid = MinorStageValidation.validate_minor_stage(minor_stage, existing_minor_stages, existing_minor_stages_costs, major_stage_costs, assigned_titles)  
     
     if not isValid:
         return jsonify({'minorStageFormValues': response, 'status': 400})
@@ -106,6 +107,7 @@ def update_minor_stage(current_user, majorStageId, minorStageId):
         minor_stage = request.get_json()
         result = db.session.execute(db.select(MinorStage).filter(MinorStage.id!=minorStageId, MinorStage.major_stage_id==majorStageId))
         existing_minor_stages = result.scalars().all()
+        assigned_titles = get_users_stages_titles(current_user)
         
         existing_minor_stages_costs = []
         for stage in existing_minor_stages:
@@ -119,7 +121,7 @@ def update_minor_stage(current_user, majorStageId, minorStageId):
     except:
         return jsonify({'error': 'Unknown error'}, 400) 
     
-    response, isValid = MinorStageValidation.validate_minor_stage(minor_stage, existing_minor_stages, existing_minor_stages_costs, major_stage_costs)
+    response, isValid = MinorStageValidation.validate_minor_stage(minor_stage, existing_minor_stages, existing_minor_stages_costs, major_stage_costs, assigned_titles)
 
     if not isValid:
         return jsonify({'minorStageFormValues': response, 'status': 400})

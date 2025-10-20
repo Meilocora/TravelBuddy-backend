@@ -2,7 +2,7 @@ from flask import Blueprint, jsonify, request
 from app.routes.util import calculate_journey_costs
 from db import db
 from app.routes.route_protection import token_required
-from app.routes.util import parseDate, formatDateToString, parseDateTime, formatDateTimeToString
+from app.routes.util import parseDate, formatDateToString, parseDateTime, formatDateTimeToString, get_users_stages_titles
 from app.models import Costs, Journey, Spendings, MajorStage, Transportation, MinorStage
 from app.validation.major_stage_validation import MajorStageValidation
 
@@ -15,6 +15,7 @@ def create_major_stage(current_user, journeyId):
         major_stage = request.get_json()
         result = db.session.execute(db.select(MajorStage).filter_by(journey_id=journeyId))
         existing_major_stages = result.scalars().all()
+        assigned_titles = get_users_stages_titles(current_user)
         
         existing_major_stages_costs = []
         for stage in existing_major_stages:
@@ -25,7 +26,7 @@ def create_major_stage(current_user, journeyId):
     except:
         return jsonify({'error': 'Unknown error'}, 400) 
     
-    response, isValid = MajorStageValidation.validate_major_stage(major_stage, existing_major_stages, existing_major_stages_costs, journey_costs)
+    response, isValid = MajorStageValidation.validate_major_stage(major_stage, existing_major_stages, existing_major_stages_costs, journey_costs, assigned_titles)
     
     if not isValid:
         return jsonify({'majorStageFormValues': response, 'status': 400})
@@ -81,6 +82,8 @@ def update_major_stage(current_user, journeyId, majorStageId):
         result = db.session.execute(db.select(MajorStage).filter(MajorStage.id != majorStageId, MajorStage.journey_id==journeyId))
         existing_major_stages = result.scalars().all()
         old_major_stage = db.get_or_404(MajorStage, majorStageId)
+        assigned_titles = get_users_stages_titles(current_user)
+
     
         existing_major_stages_costs = []
         for stage in existing_major_stages:
@@ -92,7 +95,7 @@ def update_major_stage(current_user, journeyId, majorStageId):
         return jsonify({'error': 'Unknown error'}, 400)
     
     
-    response, isValid = MajorStageValidation.validate_major_stage_update(major_stage, existing_major_stages, existing_major_stages_costs, journey_costs, minor_stages)
+    response, isValid = MajorStageValidation.validate_major_stage_update(major_stage, existing_major_stages, existing_major_stages_costs, journey_costs, minor_stages, assigned_titles)
     
     if not isValid:
         return jsonify({'majorStageFormValues': response, 'status': 400})

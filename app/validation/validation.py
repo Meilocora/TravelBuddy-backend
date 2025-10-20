@@ -28,6 +28,13 @@ class Validation:
       pass
       
     return self.__return_feedback()
+
+
+  def validate_title(self, title: str, assigned_titles: list) -> bool | None:
+    if title in assigned_titles:
+      self.error_list.append('Stage title already assigned')
+      
+    return self.__return_feedback()
     
     
   def validate_date_time(self, value: str, min_date_time: str = None) -> bool | None:

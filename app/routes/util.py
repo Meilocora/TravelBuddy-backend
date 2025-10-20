@@ -5,7 +5,7 @@ from currency_converter import CurrencyConverter
 from timezonefinder import TimezoneFinder
 import pytz
 from db import db
-from app.models import Costs, Spendings, Transportation, MajorStage, MinorStage, Accommodation, Activity
+from app.models import Journey, Costs, Spendings, Transportation, MajorStage, MinorStage, Accommodation, Activity
 
 
 def parseDate(dateString: str): 
@@ -157,3 +157,19 @@ def safe_countryinfo_attr(obj, attr, join=False):
     except Exception:
         return None
     return None
+
+
+def get_users_stages_titles(current_user):
+    assigned_titles = []
+    
+    journeys = db.session.execute(db.select(Journey).filter_by(user_id=current_user)).scalars().all()
+    for journey in journeys:
+        assigned_titles.append(journey.name)
+        major_stages = db.session.execute(db.select(MajorStage).filter_by(journey_id=journey.id)).scalars().all()
+        for major_stage in major_stages:
+            assigned_titles.append(major_stage.title)
+            minor_stages = db.session.execute(db.select(MinorStage).filter_by(major_stage_id=major_stage.id)).scalars().all()
+            for minor_stage in minor_stages:
+                assigned_titles.append(minor_stage.title)
+
+    return assigned_titles
