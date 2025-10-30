@@ -1,4 +1,5 @@
 from flask import Blueprint, jsonify, request
+from app.routes.db_util import adjust_minor_stages_orders, adjust_stages_orders
 from db import db
 from app.routes.route_protection import token_required
 from app.routes.util import get_users_stages_titles, parseDate, formatDateToString, parseDateTime, formatDateTimeToString
@@ -36,12 +37,16 @@ def create_minor_stage(current_user, majorStageId):
         return jsonify({'minorStageFormValues': response, 'status': 400})
     
     try:
-        print(minor_stage)
+         # Adjust orders of existing major stages if necessary
+        if int(minor_stage['order']['value']) <= len(existing_minor_stages):
+            adjust_stages_orders(existing_minor_stages, int(minor_stage['order']['value']))
+
         # Create a new minor stage
         new_minor_stage = MinorStage(
             title=minor_stage['title']['value'],
             scheduled_start_time=parseDate(minor_stage['scheduled_start_time']['value']),
             scheduled_end_time=parseDate(minor_stage['scheduled_end_time']['value']),
+            order=minor_stage['order']['value'],
             major_stage_id=majorStageId
         )
         db.session.add(new_minor_stage)
@@ -80,6 +85,7 @@ def create_minor_stage(current_user, majorStageId):
                                 'title': new_minor_stage.title,
                                 'scheduled_start_time': formatDateToString(new_minor_stage.scheduled_start_time),
                                 'scheduled_end_time': formatDateToString(new_minor_stage.scheduled_end_time),
+                                'order': new_minor_stage.order,
                                 'costs': {
                                     'budget': costs.budget,
                                     'spent_money': costs.spent_money,
@@ -107,6 +113,7 @@ def update_minor_stage(current_user, majorStageId, minorStageId):
         minor_stage = request.get_json()
         result = db.session.execute(db.select(MinorStage).filter(MinorStage.id!=minorStageId, MinorStage.major_stage_id==majorStageId))
         existing_minor_stages = result.scalars().all()
+        old_minor_stage = db.get_or_404(MinorStage, minorStageId)
         assigned_titles = get_users_stages_titles(current_user)
         
         existing_minor_stages_costs = []
@@ -121,7 +128,7 @@ def update_minor_stage(current_user, majorStageId, minorStageId):
     except:
         return jsonify({'error': 'Unknown error'}, 400) 
     
-    response, isValid = MinorStageValidation.validate_minor_stage(minor_stage, existing_minor_stages, existing_minor_stages_costs, major_stage_costs, assigned_titles)
+    response, isValid = MinorStageValidation.validate_minor_stage(minor_stage, existing_minor_stages, existing_minor_stages_costs, major_stage_costs, assigned_titles, old_minor_stage)
 
     if not isValid:
         return jsonify({'minorStageFormValues': response, 'status': 400})
@@ -135,11 +142,15 @@ def update_minor_stage(current_user, majorStageId, minorStageId):
     
     
     try:
+        # Adjust orders of existing minor stages if necessary
+        adjust_stages_orders(existing_minor_stages, minor_stage['order']['value'], old_minor_stage.order)
+
         # Update the minor stage
         db.session.execute(db.update(MinorStage).where(MinorStage.id == minorStageId).values(
             title=minor_stage['title']['value'],
             scheduled_start_time=parseDate(minor_stage['scheduled_start_time']['value']),
             scheduled_end_time=parseDate(minor_stage['scheduled_end_time']['value']),
+            order=minor_stage['order']['value']
         ))
         db.session.commit()
                 
@@ -172,6 +183,7 @@ def update_minor_stage(current_user, majorStageId, minorStageId):
                                 'title': minor_stage['title']['value'],
                                 'scheduled_start_time': minor_stage['scheduled_start_time']['value'],
                                 'scheduled_end_time': minor_stage['scheduled_end_time']['value'],
+                                'order': minor_stage['order']['value'],
                                 'costs': {
                                     'budget': minor_stage['budget']['value'],
                                     'spent_money': minor_stage['spent_money']['value'],
@@ -221,10 +233,17 @@ def update_minor_stage(current_user, majorStageId, minorStageId):
 @token_required
 def delete_minor_stage(current_user, minorStageId):
     major_stage_id = db.session.execute(db.select(MinorStage).filter_by(id=minorStageId)).scalars().first().major_stage_id
-    journey_id = db.session.execute(db.select(MajorStage).filter_by(id=major_stage_id)).scalars().first().journey_id
+    major_stage = db.session.execute(db.select(MajorStage).filter_by(id=major_stage_id)).scalars().first()
+    journey_id = major_stage.journey_id
     journey_costs = db.session.execute(db.select(Costs).filter_by(journey_id=journey_id)).scalars().first()
     try:        
         minor_stage = db.get_or_404(MinorStage, minorStageId)
+        
+        # Adjust orders of existing major stages if necessary
+        if minor_stage.order < len(major_stage.minor_stages):
+            later_minor_stages = [other_minor_stage for other_minor_stage in major_stage.minor_stages if other_minor_stage.order > minor_stage.order]
+            adjust_stages_orders(later_minor_stages, 999, minor_stage.order)
+
         db.session.delete(minor_stage)
         db.session.commit()
         
@@ -238,5 +257,17 @@ def delete_minor_stage(current_user, minorStageId):
         return jsonify({'status': 200})
     except Exception as e:
         return jsonify({'error': str(e)}, 500)
-    
-    
+
+
+@minor_stage_bp.route('/swap-minor-stages', methods=['POST'])
+@token_required
+def swap_minor_stages(current_user):
+    stagesOrderList = request.get_json()["stagesOrderList"]
+    try:
+        for item in stagesOrderList:
+            db.session.execute(db.update(MinorStage).where(MinorStage.id == int(item['id'])).values(order=item['order']))
+        db.session.commit()
+        
+        return jsonify({'status': 200})
+    except Exception as e:
+        return jsonify({'error': str(e)}, 500)

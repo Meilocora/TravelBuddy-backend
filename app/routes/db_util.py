@@ -61,6 +61,8 @@ def fetch_custom_countries(current_user, journeyId):
                 
         custom_countries = []
         
+        # TODO: Hier current_user berücksichtigen?!
+        
         for countryId in countryIds:
             custom_country = CustomCountry.query.filter_by(id=countryId).order_by(CustomCountry.name).first()
             custom_countries.append(custom_country)
@@ -100,7 +102,7 @@ def fetch_custom_countries(current_user, journeyId):
 def fetch_major_stages(current_user, journeyId):
     try:
         # Get all the major stages from the database
-        result = db.session.execute(db.select(MajorStage).filter_by(journey_id=journeyId).order_by(MajorStage.scheduled_start_time))
+        result = db.session.execute(db.select(MajorStage).filter_by(journey_id=journeyId).order_by(MajorStage.order))
         majorStages = result.scalars().all()
         
         # Fetch costs, transportation and minor_stages for each major_stage
@@ -113,12 +115,14 @@ def fetch_major_stages(current_user, journeyId):
             transportation = transportation_result.scalars().first()
             
             minorStages = db.session.execute(db.select(MinorStage).filter_by(major_stage_id=majorStage.id)).scalars().all()
+    
                         
             # Append the whole major stage, that matches the model from frontend to the list
             major_stage_data = {
                 'id': majorStage.id,
                 'title': majorStage.title,
                 'country': majorStage.country,
+                'order': majorStage.order,
                 'scheduled_start_time': formatDateToString(majorStage.scheduled_start_time),
                 'scheduled_end_time': formatDateToString(majorStage.scheduled_end_time),
                 'additional_info': majorStage.additional_info,
@@ -128,6 +132,7 @@ def fetch_major_stages(current_user, journeyId):
                     'money_exceeded': costs.money_exceeded,
                 }
             }
+            
             
             custom_country = fetch_custom_country(current_user=current_user, countryName=majorStage.country)
             if not isinstance(custom_country, Exception):
@@ -206,7 +211,7 @@ def fetch_custom_country(current_user, countryName):
 def fetch_minor_stages(majorStageId):
     try:
         # Get all the minor stages from the database
-        result = db.session.execute(db.select(MinorStage).filter_by(major_stage_id=majorStageId).order_by(MinorStage.scheduled_start_time))
+        result = db.session.execute(db.select(MinorStage).filter_by(major_stage_id=majorStageId).order_by(MinorStage.order))
         minorStages = result.scalars().all()
                 
         # Fetch costs, transportation, accommodation, activities and places_to_visit for each minor_stage
@@ -227,6 +232,7 @@ def fetch_minor_stages(majorStageId):
                 'title': minorStage.title,
                 'scheduled_start_time': formatDateToString(minorStage.scheduled_start_time),
                 'scheduled_end_time': formatDateToString(minorStage.scheduled_end_time),
+                'order': minorStage.order,
                 'costs': {
                     'budget': costs.budget,
                     'spent_money': costs.spent_money,
@@ -277,3 +283,38 @@ def fetch_minor_stages(majorStageId):
         return minor_stages_list
     except Exception as e:
         return e
+   
+
+def adjust_major_stages_orders(later_majorStages, mode='increment'):
+    for majorStage in later_majorStages:
+        if mode == 'increment':
+            majorStage.order = majorStage.order + 1
+        elif mode == 'decrement':
+            majorStage.order = majorStage.order - 1
+        db.session.commit()
+        
+
+def adjust_minor_stages_orders(later_minorStages, mode='increment'):
+    for minorStage in later_minorStages:
+        if mode == 'increment':
+            minorStage.order = minorStage.order + 1
+        elif mode == 'decrement':
+            minorStage.order = minorStage.order - 1
+        db.session.commit()
+
+
+def adjust_stages_orders(other_stages, new_order, old_order=None):    
+    print("new order: ", new_order)
+    print("old order: ", old_order)
+    for stage in other_stages:
+        print("current stage order: ", stage.order)
+        if old_order is None:   
+            if stage.order >= new_order:
+                stage.order = stage.order + 1
+        elif old_order < new_order:
+            if stage.order > old_order and stage.order <= new_order:
+                stage.order = stage.order - 1
+        elif old_order > new_order:
+            if stage.order < old_order and stage.order >= new_order:
+                stage.order = stage.order + 1
+        db.session.commit()

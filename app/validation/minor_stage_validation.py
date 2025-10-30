@@ -25,7 +25,7 @@ class MinorStageValidation(Validation):
     
   
   @staticmethod
-  def validate_minor_stage(minorStage, existing_minor_stages, existing_minor_stages_costs, major_stage_costs, assigned_titles):
+  def validate_minor_stage(minorStage, existing_minor_stages, existing_minor_stages_costs, major_stage_costs, assigned_titles, old_minor_stage=None):
         errors = False
       
         for key, value in minorStage.items():
@@ -40,7 +40,7 @@ class MinorStageValidation(Validation):
             minorStage['title']['isValid'] = False
             
         assigned_title_val = MinorStageValidation().validate_title(minorStage['title']['value'], assigned_titles)
-        if assigned_title_val:
+        if assigned_title_val and old_minor_stage and minorStage['title']['value'] != old_minor_stage.title:
             minorStage['title']['errors'].append(f", {assigned_title_val}")
             minorStage['title']['isValid'] = False
 

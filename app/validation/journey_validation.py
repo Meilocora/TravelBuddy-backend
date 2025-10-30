@@ -76,7 +76,7 @@ class JourneyValidation(Validation):
      
      
   @staticmethod
-  def validate_journey_update(journey, existing_journeys, major_stages, assigned_titles):
+  def validate_journey_update(journey, existing_journeys, major_stages, assigned_titles, old_journey):
           errors = False
         
           for key, value in journey.items():
@@ -97,7 +97,7 @@ class JourneyValidation(Validation):
               
               
           assigned_title_val = JourneyValidation().validate_title(journey['name']['value'], assigned_titles)
-          if assigned_title_val:
+          if assigned_title_val and old_journey and journey['name']['value'] != old_journey.name:
               journey['name']['errors'].append(f", {assigned_title_val}")
               journey['name']['isValid'] = False                  
                

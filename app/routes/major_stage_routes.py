@@ -1,4 +1,5 @@
 from flask import Blueprint, jsonify, request
+from app.routes.db_util import adjust_stages_orders
 from app.routes.util import calculate_journey_costs
 from db import db
 from app.routes.route_protection import token_required
@@ -32,6 +33,10 @@ def create_major_stage(current_user, journeyId):
         return jsonify({'majorStageFormValues': response, 'status': 400})
     
     try:
+        # Adjust orders of existing major stages if necessary
+        if int(major_stage['order']['value']) <= len(existing_major_stages):
+            adjust_stages_orders(existing_major_stages, int(major_stage['order']['value']))
+
         # Create a new major stage
         new_major_stage = MajorStage(
             title=major_stage['title']['value'],
@@ -39,6 +44,7 @@ def create_major_stage(current_user, journeyId):
             scheduled_end_time=parseDate(major_stage['scheduled_end_time']['value']),
             additional_info=major_stage['additional_info']['value'],
             country=major_stage['country']['value'],
+            order=major_stage['order']['value'],
             journey_id=journeyId
         )
         db.session.add(new_major_stage)
@@ -61,6 +67,7 @@ def create_major_stage(current_user, journeyId):
                                 'scheduled_end_time': formatDateToString(new_major_stage.scheduled_end_time),
                                 'additional_info': new_major_stage.additional_info,
                                 'country': new_major_stage.country,
+                                'order': new_major_stage.order,
                                 'costs': {
                                     'budget': costs.budget,
                                     'spent_money': costs.spent_money,
@@ -95,7 +102,7 @@ def update_major_stage(current_user, journeyId, majorStageId):
         return jsonify({'error': 'Unknown error'}, 400)
     
     
-    response, isValid = MajorStageValidation.validate_major_stage_update(major_stage, existing_major_stages, existing_major_stages_costs, journey_costs, minor_stages, assigned_titles)
+    response, isValid = MajorStageValidation.validate_major_stage_update(major_stage, existing_major_stages, existing_major_stages_costs, journey_costs, minor_stages, assigned_titles, old_major_stage)
     
     if not isValid:
         return jsonify({'majorStageFormValues': response, 'status': 400})
@@ -116,14 +123,19 @@ def update_major_stage(current_user, journeyId, majorStageId):
     major_stage_spendings = db.session.execute(db.select(Spendings).join(Costs).filter(Costs.major_stage_id == majorStageId)).scalars().all()
     transportation = db.session.execute(db.select(Transportation).filter_by(major_stage_id=majorStageId)).scalars().first()
     
-    try:    
+    try:        
+        # Adjust orders of existing major stages if necessary     
+        adjust_stages_orders(existing_major_stages, major_stage['order']['value'], old_major_stage.order)
+
+            
         # Update the major_stage
         db.session.execute(db.update(MajorStage).where(MajorStage.id == majorStageId).values(
             title=major_stage['title']['value'],
             scheduled_start_time=parseDate(major_stage['scheduled_start_time']['value']),
             scheduled_end_time=parseDate(major_stage['scheduled_end_time']['value']),
             additional_info=major_stage['additional_info']['value'],
-            country=major_stage['country']['value']
+            country=major_stage['country']['value'],
+            order=major_stage['order']['value']
         ))
         db.session.commit()
         
@@ -141,6 +153,7 @@ def update_major_stage(current_user, journeyId, majorStageId):
                                 'scheduled_end_time': major_stage['scheduled_end_time']['value'],
                                 'additional_info': major_stage['additional_info']['value'],
                                 'country': major_stage['country']['value'],
+                                'order': major_stage['order']['value'],
                                 'costs': {
                                     'budget': major_stage['budget']['value'],
                                     'spent_money': major_stage['spent_money']['value'],
@@ -174,6 +187,11 @@ def delete_major_stage(current_user, majorStageId):
     journey_costs = db.session.execute(db.select(Costs).filter_by(journey_id=journey.id)).scalars().first()
     try:        
         major_stage = db.get_or_404(MajorStage, majorStageId)
+        # Adjust orders of existing major stages if necessary
+        if major_stage.order < len(journey.major_stages):
+            later_major_stages = [other_major_stage for other_major_stage in journey.major_stages if other_major_stage.order > major_stage.order]
+            adjust_stages_orders(later_major_stages, 999, major_stage.order)
+            
         db.session.delete(major_stage)
         db.session.commit()
         
@@ -183,3 +201,16 @@ def delete_major_stage(current_user, majorStageId):
     except Exception as e:
         return jsonify({'error': str(e)}, 500)
     
+    
+@major_stage_bp.route('/swap-major-stages', methods=['POST'])
+@token_required
+def swap_major_stages(current_user):
+    stagesOrderList = request.get_json()["stagesOrderList"]
+    try:
+        for item in stagesOrderList:
+            db.session.execute(db.update(MajorStage).where(MajorStage.id == int(item['id'])).values(order=item['order']))
+        db.session.commit()
+        
+        return jsonify({'status': 200})
+    except Exception as e:
+        return jsonify({'error': str(e)}, 500)

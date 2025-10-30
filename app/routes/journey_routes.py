@@ -105,17 +105,17 @@ def update_journey(current_user, journeyId):
         major_stages = db.session.execute(db.select(MajorStage).filter_by(journey_id=journeyId)).scalars().all()
         existing_journeys = result.scalars().all()
         assigned_titles = get_users_stages_titles(current_user)
+        old_journey = db.get_or_404(Journey, journeyId)
     except:
         return jsonify({'error': 'Unknown error'}, 400)
     
-    
-    response, isValid = JourneyValidation.validate_journey_update(journey, existing_journeys, major_stages, assigned_titles)
+    response, isValid = JourneyValidation.validate_journey_update(journey, existing_journeys, major_stages, assigned_titles, old_journey)
         
     if not isValid:
         return jsonify({'journeyFormValues': response, 'status': 400})
     
     
-    old_journey = db.get_or_404(Journey, journeyId)
+    
 
     money_exceeded = float(response['budget']['value']) < float(response['spent_money']['value'])
 
