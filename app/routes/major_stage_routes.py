@@ -34,8 +34,8 @@ def create_major_stage(current_user, journeyId):
     
     try:
         # Adjust orders of existing major stages if necessary
-        if int(major_stage['order']['value']) <= len(existing_major_stages):
-            adjust_stages_orders(existing_major_stages, int(major_stage['order']['value']))
+        if int(major_stage['position']['value']) <= len(existing_major_stages):
+            adjust_stages_orders(existing_major_stages, int(major_stage['position']['value']))
 
         # Create a new major stage
         new_major_stage = MajorStage(
@@ -44,7 +44,7 @@ def create_major_stage(current_user, journeyId):
             scheduled_end_time=parseDate(major_stage['scheduled_end_time']['value']),
             additional_info=major_stage['additional_info']['value'],
             country=major_stage['country']['value'],
-            order=major_stage['order']['value'],
+            position=major_stage['position']['value'],
             journey_id=journeyId
         )
         db.session.add(new_major_stage)
@@ -67,7 +67,7 @@ def create_major_stage(current_user, journeyId):
                                 'scheduled_end_time': formatDateToString(new_major_stage.scheduled_end_time),
                                 'additional_info': new_major_stage.additional_info,
                                 'country': new_major_stage.country,
-                                'order': new_major_stage.order,
+                                'position': new_major_stage.position,
                                 'costs': {
                                     'budget': costs.budget,
                                     'spent_money': costs.spent_money,
@@ -125,7 +125,7 @@ def update_major_stage(current_user, journeyId, majorStageId):
     
     try:        
         # Adjust orders of existing major stages if necessary     
-        adjust_stages_orders(existing_major_stages, major_stage['order']['value'], old_major_stage.order)
+        adjust_stages_orders(existing_major_stages, major_stage['position']['value'], old_major_stage.position)
 
             
         # Update the major_stage
@@ -135,7 +135,7 @@ def update_major_stage(current_user, journeyId, majorStageId):
             scheduled_end_time=parseDate(major_stage['scheduled_end_time']['value']),
             additional_info=major_stage['additional_info']['value'],
             country=major_stage['country']['value'],
-            order=major_stage['order']['value']
+            position=major_stage['position']['value']
         ))
         db.session.commit()
         
@@ -153,7 +153,7 @@ def update_major_stage(current_user, journeyId, majorStageId):
                                 'scheduled_end_time': major_stage['scheduled_end_time']['value'],
                                 'additional_info': major_stage['additional_info']['value'],
                                 'country': major_stage['country']['value'],
-                                'order': major_stage['order']['value'],
+                                'position': major_stage['position']['value'],
                                 'costs': {
                                     'budget': major_stage['budget']['value'],
                                     'spent_money': major_stage['spent_money']['value'],
@@ -188,9 +188,9 @@ def delete_major_stage(current_user, majorStageId):
     try:        
         major_stage = db.get_or_404(MajorStage, majorStageId)
         # Adjust orders of existing major stages if necessary
-        if major_stage.order < len(journey.major_stages):
-            later_major_stages = [other_major_stage for other_major_stage in journey.major_stages if other_major_stage.order > major_stage.order]
-            adjust_stages_orders(later_major_stages, 999, major_stage.order)
+        if major_stage.position < len(journey.major_stages):
+            later_major_stages = [other_major_stage for other_major_stage in journey.major_stages if other_major_stage.position > major_stage.position]
+            adjust_stages_orders(later_major_stages, 999, major_stage.position)
             
         db.session.delete(major_stage)
         db.session.commit()
@@ -208,7 +208,7 @@ def swap_major_stages(current_user):
     stagesOrderList = request.get_json()["stagesOrderList"]
     try:
         for item in stagesOrderList:
-            db.session.execute(db.update(MajorStage).where(MajorStage.id == int(item['id'])).values(order=item['order']))
+            db.session.execute(db.update(MajorStage).where(MajorStage.id == int(item['id'])).values(position=item['position']))
         db.session.commit()
         
         return jsonify({'status': 200})
