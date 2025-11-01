@@ -1,6 +1,5 @@
 from datetime import datetime
 import locale
-from db import db
 from app.validation.validation import Validation
 
 # Set German locale with fallback for different operating systems

@@ -5,7 +5,6 @@ from app.routes.util import parseDate, formatDateToString, get_users_stages_titl
 from app.models import Journey, Costs, Spendings, MajorStage,  CustomCountry, JourneysCustomCountriesLink
 from app.validation.journey_validation import JourneyValidation
 from app.routes.db_util import fetch_journeys
-from app.routes.util import calculate_time_zone_offset, get_local_currency
 
 journey_bp = Blueprint('journey', __name__)
 

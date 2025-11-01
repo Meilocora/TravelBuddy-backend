@@ -14,9 +14,9 @@ def get_user_data(current_user):
     user_time_zone_offset = 0
     
     # TODO: For some reason this won't work anymore
-    # if latitude is None or longitude is None:
-    #     user_time_zone_offset = 0
-    # else:
-    #     user_time_zone_offset =  calculate_time_zone_offset(latitude, longitude)
-    #     currencyInfo = get_local_currency(latitude, longitude)
+    if latitude is None or longitude is None:
+        user_time_zone_offset = 0
+    else:
+        user_time_zone_offset =  calculate_time_zone_offset(latitude, longitude)
+        currencyInfo = get_local_currency(latitude, longitude)
     return jsonify({'offset': user_time_zone_offset, 'status': 200, 'localCurrency': currencyInfo['currency'], 'conversionRate': currencyInfo['conversion_rate']})

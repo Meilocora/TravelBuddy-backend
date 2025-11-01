@@ -3,7 +3,7 @@ from app.routes.db_util import adjust_stages_orders
 from app.routes.util import calculate_journey_costs
 from db import db
 from app.routes.route_protection import token_required
-from app.routes.util import parseDate, formatDateToString, parseDateTime, formatDateTimeToString, get_users_stages_titles
+from app.routes.util import parseDate, formatDateToString, formatDateTimeToString, get_users_stages_titles
 from app.models import Costs, Journey, Spendings, MajorStage, Transportation, MinorStage
 from app.validation.major_stage_validation import MajorStageValidation
 
