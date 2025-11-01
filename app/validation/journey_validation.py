@@ -9,7 +9,7 @@ class JourneyValidation(Validation):
     
   
   @staticmethod
-  def validate_journey(journey, existing_journeys):
+  def validate_journey(journey, existing_journeys, assigned_titles):
         errors = False
       
         for key, value in journey.items():
@@ -27,6 +27,12 @@ class JourneyValidation(Validation):
             journey['name']['errors'].append(f", {name_val}")
             journey['name']['isValid'] = False
             
+            
+        assigned_title_val = JourneyValidation().validate_title(journey['name']['value'], assigned_titles)
+        if assigned_title_val:
+            journey['name']['errors'].append(f", {assigned_title_val}")
+            journey['name']['isValid'] = False    
+        
         
         for existing_journey in existing_journeys:
             start_val = JourneyValidation().check_for_overlap(journey['scheduled_start_time']['value'], existing_journey.scheduled_start_time, existing_journey.scheduled_end_time, existing_journey.name)
@@ -70,7 +76,7 @@ class JourneyValidation(Validation):
      
      
   @staticmethod
-  def validate_journey_update(journey, existing_journeys, major_stages):
+  def validate_journey_update(journey, existing_journeys, major_stages, assigned_titles, old_journey):
           errors = False
         
           for key, value in journey.items():
@@ -88,6 +94,12 @@ class JourneyValidation(Validation):
           if name_val:
               journey['name']['errors'].append(f", {name_val}")
               journey['name']['isValid'] = False
+              
+              
+          assigned_title_val = JourneyValidation().validate_title(journey['name']['value'], assigned_titles)
+          if assigned_title_val and old_journey and journey['name']['value'] != old_journey.name:
+              journey['name']['errors'].append(f", {assigned_title_val}")
+              journey['name']['isValid'] = False                  
                
           for existing_journey in existing_journeys:
             start_val = JourneyValidation().check_for_overlap(journey['scheduled_start_time']['value'], existing_journey.scheduled_start_time, existing_journey.scheduled_end_time, existing_journey.name)

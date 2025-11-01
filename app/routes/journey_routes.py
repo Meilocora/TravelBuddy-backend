@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify
 from db import db
 from app.routes.route_protection import token_required
-from app.routes.util import parseDate, formatDateToString
+from app.routes.util import parseDate, formatDateToString, get_users_stages_titles
 from app.models import Journey, Costs, Spendings, MajorStage,  CustomCountry, JourneysCustomCountriesLink
 from app.validation.journey_validation import JourneyValidation
 from app.routes.db_util import fetch_journeys
@@ -27,12 +27,13 @@ def create_journey(current_user):
         journey = request.get_json()
         result = db.session.execute(db.select(Journey).filter_by(user_id=current_user))
         existing_journeys = result.scalars().all()
+        assigned_titles = get_users_stages_titles(current_user)
          
     except:
-        return jsonify({'error': 'Unknown error'}, 400) 
-    
-    response, isValid = JourneyValidation.validate_journey(journey, existing_journeys)
-    
+        return jsonify({'error': 'Unknown error'}, 400)
+
+    response, isValid = JourneyValidation.validate_journey(journey, existing_journeys, assigned_titles)
+
     if not isValid:
         return jsonify({'journeyFormValues': response, 'status': 400})
     
@@ -103,17 +104,18 @@ def update_journey(current_user, journeyId):
         result = db.session.execute(db.select(Journey).filter(Journey.id != journeyId, Journey.user_id==current_user))
         major_stages = db.session.execute(db.select(MajorStage).filter_by(journey_id=journeyId)).scalars().all()
         existing_journeys = result.scalars().all()
+        assigned_titles = get_users_stages_titles(current_user)
+        old_journey = db.get_or_404(Journey, journeyId)
     except:
         return jsonify({'error': 'Unknown error'}, 400)
     
-    
-    response, isValid = JourneyValidation.validate_journey_update(journey, existing_journeys, major_stages)
+    response, isValid = JourneyValidation.validate_journey_update(journey, existing_journeys, major_stages, assigned_titles, old_journey)
         
     if not isValid:
         return jsonify({'journeyFormValues': response, 'status': 400})
     
     
-    old_journey = db.get_or_404(Journey, journeyId)
+    
 
     money_exceeded = float(response['budget']['value']) < float(response['spent_money']['value'])
 

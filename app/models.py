@@ -99,8 +99,7 @@ class MajorStage(db.Model):
     scheduled_end_time: Mapped[DateTime] = mapped_column(DateTime, nullable=False)
     additional_info: Mapped[str] = mapped_column(String, nullable=True)
     country: Mapped[str] = mapped_column(String, nullable=False)
-    # TODO: Add sequence field to let user sort major stages as he wants
-    # sequence: Mapped[int] = mapped_column(Integer, nullable=False)
+    position: Mapped[int] = mapped_column(Integer, nullable=False)
 
     # Define relationships to children
     costs: Mapped['Costs'] = relationship('Costs', back_populates='major_stage', cascade='all, delete-orphan')
@@ -121,8 +120,7 @@ class MinorStage(db.Model):
     title: Mapped[str] = mapped_column(String(40), nullable=False)
     scheduled_start_time: Mapped[DateTime] = mapped_column(DateTime, nullable=False)
     scheduled_end_time: Mapped[DateTime] = mapped_column(DateTime, nullable=False)
-    # TODO: Add sequence field to let user sort major stages as he wants
-    # sequence: Mapped[int] = mapped_column(Integer, nullable=False)
+    position: Mapped[int] = mapped_column(Integer, nullable=False)
 
     # Define relationships to children
     costs: Mapped['Costs'] = relationship('Costs', back_populates='minor_stage', cascade='all, delete-orphan')
