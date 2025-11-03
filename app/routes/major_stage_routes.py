@@ -16,6 +16,7 @@ def create_major_stage(current_user, journeyId):
         major_stage = request.get_json()
         result = db.session.execute(db.select(MajorStage).filter_by(journey_id=journeyId))
         existing_major_stages = result.scalars().all()
+                
         assigned_titles = get_users_stages_titles(current_user)
         
         existing_major_stages_costs = []
@@ -205,9 +206,9 @@ def delete_major_stage(current_user, majorStageId):
 @major_stage_bp.route('/swap-major-stages', methods=['POST'])
 @token_required
 def swap_major_stages(current_user):
-    stagesOrderList = request.get_json()["stagesOrderList"]
+    stagesPositionList = request.get_json()["stagesPositionList"]
     try:
-        for item in stagesOrderList:
+        for item in stagesPositionList:
             db.session.execute(db.update(MajorStage).where(MajorStage.id == int(item['id'])).values(position=item['position']))
         db.session.commit()
         
