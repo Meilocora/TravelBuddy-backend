@@ -29,7 +29,7 @@ class MajorStageValidation(Validation):
         errors = False
       
         for key, value in majorStage.items():
-            if key != 'additional_info' and key != 'scheduled_start_time' and key != 'scheduled_end_time':
+            if key != 'additional_info':
                 if value['value'] == "" or value['value'] == None:
                     majorStage[key]['errors'].append(f'Input is required')
                     majorStage[key]['isValid'] = False
@@ -110,7 +110,7 @@ class MajorStageValidation(Validation):
         errors = False
       
         for key, value in majorStage.items():
-            if key != 'additional_info' and key != 'scheduled_start_time' and key != 'scheduled_end_time':
+            if key != 'additional_info':
                 if value['value'] == "" or value['value'] == None:
                     majorStage[key]['errors'].append(f'Input is required')
                     majorStage[key]['isValid'] = False
@@ -156,20 +156,20 @@ class MajorStageValidation(Validation):
         #         majorStage['scheduled_end_time']['isValid'] = False
             
             
-        # start_val = MajorStageValidation().validate_date(majorStage['scheduled_start_time']['value'])
-        # if start_val:
-        #     majorStage['scheduled_start_time']['errors'].append(f", {start_val}")
-        #     majorStage['scheduled_start_time']['isValid'] = False
+        start_val = MajorStageValidation().validate_date(majorStage['scheduled_start_time']['value'])
+        if start_val:
+            majorStage['scheduled_start_time']['errors'].append(f", {start_val}")
+            majorStage['scheduled_start_time']['isValid'] = False
         
-        # end_val = MajorStageValidation().validate_date(majorStage['scheduled_end_time']['value'])
-        # if end_val:
-        #     majorStage['scheduled_end_time']['errors'].append(f", {end_val}")
-        #     majorStage['scheduled_end_time']['isValid'] = False
+        end_val = MajorStageValidation().validate_date(majorStage['scheduled_end_time']['value'])
+        if end_val:
+            majorStage['scheduled_end_time']['errors'].append(f", {end_val}")
+            majorStage['scheduled_end_time']['isValid'] = False
             
-        # start_end_val = MajorStageValidation().compare_dates(majorStage['scheduled_start_time']['value'], majorStage['scheduled_end_time']['value'])
-        # if start_end_val:
-        #     majorStage['scheduled_start_time']['errors'].append(f", {start_end_val}")
-        #     majorStage['scheduled_start_time']['isValid'] = False
+        start_end_val = MajorStageValidation().compare_dates(majorStage['scheduled_start_time']['value'], majorStage['scheduled_end_time']['value'])
+        if start_end_val:
+            majorStage['scheduled_start_time']['errors'].append(f", {start_end_val}")
+            majorStage['scheduled_start_time']['isValid'] = False
             
         money_val = MajorStageValidation().validate_amount(majorStage['budget']['value'])
         if money_val:
