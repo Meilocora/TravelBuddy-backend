@@ -29,7 +29,7 @@ class MajorStageValidation(Validation):
         errors = False
       
         for key, value in majorStage.items():
-            if key != 'additional_info':
+            if key != 'additional_info' and key != 'scheduled_start_time' and key != 'scheduled_end_time':
                 if value['value'] == "" or value['value'] == None:
                     majorStage[key]['errors'].append(f'Input is required')
                     majorStage[key]['isValid'] = False
@@ -110,7 +110,7 @@ class MajorStageValidation(Validation):
         errors = False
       
         for key, value in majorStage.items():
-            if key != 'additional_info':
+            if key != 'additional_info' and key != 'scheduled_start_time' and key != 'scheduled_end_time':
                 if value['value'] == "" or value['value'] == None:
                     majorStage[key]['errors'].append(f'Input is required')
                     majorStage[key]['isValid'] = False
