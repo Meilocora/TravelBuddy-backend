@@ -109,9 +109,12 @@ class AuthValidation(Validation):
         # newPasswordInvalid = AuthValidation().validate_password(passwordChangeData['newPassword']['value'], min_length=6, max_length=20)
         # if passwordInvalid:
         #     passwordChangeData['newPassword']['errors'] += passwordInvalid.split(', ')
-        #     passwordChangeData['newPassword']['isValid'] = False
-
-        passwordValid = bcrypt.checkpw(passwordChangeData['oldPassword']['value'].encode('utf-8'), currentUserData.password)        
+        #     passwordChangeData['newPassword']['isValid'] = False        
+       
+        stored_hash = currentUserData.password
+        if isinstance(stored_hash, str):
+            stored_hash = stored_hash.encode('utf-8')
+        passwordValid = bcrypt.checkpw(passwordChangeData['oldPassword']['value'].encode('utf-8'), stored_hash)
        
         if not passwordValid:
             passwordChangeData['oldPassword']['errors'].append("Password is incorrect")

@@ -55,26 +55,26 @@ class MinorStageValidation(Validation):
         #         minorStage['scheduled_end_time']['errors'].append(f", {end_val}")
         #         minorStage['scheduled_end_time']['isValid'] = False
             
-        start_val = MinorStageValidation().validate_date(minorStage['scheduled_start_time']['value'])
-        if start_val:
-            minorStage['scheduled_start_time']['errors'].append(f", {start_val}")
-            minorStage['scheduled_start_time']['isValid'] = False
+        # start_val = MinorStageValidation().validate_date(minorStage['scheduled_start_time']['value'])
+        # if start_val:
+        #     minorStage['scheduled_start_time']['errors'].append(f", {start_val}")
+        #     minorStage['scheduled_start_time']['isValid'] = False
         
-        end_val = MinorStageValidation().validate_date(minorStage['scheduled_end_time']['value'])
-        if end_val:
-            minorStage['scheduled_end_time']['errors'].append(f", {end_val}")
-            minorStage['scheduled_end_time']['isValid'] = False
+        # end_val = MinorStageValidation().validate_date(minorStage['scheduled_end_time']['value'])
+        # if end_val:
+        #     minorStage['scheduled_end_time']['errors'].append(f", {end_val}")
+        #     minorStage['scheduled_end_time']['isValid'] = False
             
-        start_end_val = MinorStageValidation().compare_dates(minorStage['scheduled_start_time']['value'], minorStage['scheduled_end_time']['value'])
-        if start_end_val:
-            minorStage['scheduled_start_time']['errors'].append(f", {start_end_val}")
-            minorStage['scheduled_start_time']['isValid'] = False
+        # start_end_val = MinorStageValidation().compare_dates(minorStage['scheduled_start_time']['value'], minorStage['scheduled_end_time']['value'])
+        # if start_end_val:
+        #     minorStage['scheduled_start_time']['errors'].append(f", {start_end_val}")
+        #     minorStage['scheduled_start_time']['isValid'] = False
         
-        if minorStage['accommodation_place']['value'] != "":        
-            acc_place_val = MinorStageValidation().validate_string(minorStage['accommodation_place']['value'], max_length=50)
-            if acc_place_val:
-                minorStage['accommodation_place']['errors'].append(f", {acc_place_val}")
-                minorStage['accommodation_place']['isValid'] = False
+        # if minorStage['accommodation_place']['value'] != "":        
+        #     acc_place_val = MinorStageValidation().validate_string(minorStage['accommodation_place']['value'], max_length=50)
+        #     if acc_place_val:
+        #         minorStage['accommodation_place']['errors'].append(f", {acc_place_val}")
+        #         minorStage['accommodation_place']['isValid'] = False
 
         if minorStage['accommodation_link']['value'] != "":
             acc_link_val = MinorStageValidation().validate_hyperlink(minorStage['accommodation_link']['value'])
