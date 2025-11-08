@@ -21,11 +21,11 @@ class Validation:
     elif len(value.strip()) < min_length:
       self.error_list.append(f'Min length is {min_length}')
     
-    try:
-      if len(value.strip()) > max_length:
-        self.error_list.append(f'Max length is {max_length}')
-    except AttributeError:
-      pass
+    # try:
+      # if len(value.strip()) > max_length:
+        # self.error_list.append(f'Max length is {max_length}')
+    # except AttributeError:
+      # pass
       
     return self.__return_feedback()
 
