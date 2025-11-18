@@ -10,7 +10,7 @@ def get_user_data(current_user):
     latitude = request.args.get('latitude', type=float)
     longitude = request.args.get('longitude', type=float)
 
-    currencyInfo = {'currency': 'EUR', 'conversion_rate': 1.0}
+    currencyInfo = {'code': 'EUR', 'name': 'Euro', 'symbol': '€', 'conversion_rate': 1.0}
     user_time_zone_offset = 0
     
     if latitude is None or longitude is None:
@@ -21,4 +21,4 @@ def get_user_data(current_user):
             currencyInfo = get_local_currency(latitude, longitude)
         except Exception as e:
             print(f"Error occurred: {e}")
-    return jsonify({'offset': user_time_zone_offset, 'status': 200, 'localCurrency': currencyInfo['currency'], 'conversionRate': currencyInfo['conversion_rate']})
+    return jsonify({'offset': user_time_zone_offset, 'status': 200, 'localCurrency': currencyInfo})

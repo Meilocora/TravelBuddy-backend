@@ -117,20 +117,56 @@ def get_local_currency(lat, lng):
     except Exception:
         currency = None
 
-    conversion_rate = get_conversion_rate(currency)
+    currency_info = get_currency_info(currency) if currency else {'code': None, 'name': None, 'symbol': None}
+    conversion_rate = get_conversion_rate(currency_info['code']) if currency_info['code'] else None
     if conversion_rate is not None:  
-        return {'currency': currency, 'conversion_rate': conversion_rate}
+        return {'code': currency_info['code'], 'name': currency_info['name'], 'symbol': currency_info['symbol'], 'conversion_rate': conversion_rate}
     else:
-        return {'currency': None, 'conversion_rate': None}
+        return {'code': None, 'name': None, 'symbol': None, 'conversion_rate': None}
 
 
 c = CurrencyConverter()
+
+from babel.numbers import get_currency_name, get_currency_symbol
+from babel import Locale
+
+def get_currency_info(currency_code, locale_str='en_US'):
+    try:
+        name = get_currency_name(currency_code, locale=locale_str)
+        symbol = get_currency_symbol(currency_code, locale=locale_str)
+        
+        return {
+            'code': currency_code,
+            'name': name,
+            'symbol': symbol
+        }
+    except Exception as e:
+        return {
+            'code': currency_code,
+            'name': currency_code,
+            'symbol': currency_code
+        }
 
 
 def get_all_currencies():
     try:
         currencies = c.currencies
-        return currencies
+        
+        currency_list = []
+        
+        for currency_code in sorted(currencies):
+            info = get_currency_info(currency_code)
+            conversion_rate = get_conversion_rate(currency_code)
+            
+            if conversion_rate is not None:
+                currency_list.append({
+                    'code': info['code'],
+                    'name': info['name'],
+                    'symbol': info['symbol'],
+                    'conversionRate': conversion_rate
+                })       
+        
+        return currency_list
     except Exception as e:
         print(f"Error fetching currencies: {e}")
         return None
