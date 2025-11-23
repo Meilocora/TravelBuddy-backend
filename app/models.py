@@ -127,8 +127,13 @@ class MinorStage(db.Model):
     transportations: Mapped['Transportation'] = relationship('Transportation', back_populates='minor_stage', cascade='all, delete-orphan')
     accommodations: Mapped[list['Accommodation']] = relationship('Accommodation', back_populates='minor_stage', cascade='all, delete-orphan')
     activities: Mapped[list['Activity']] = relationship('Activity', back_populates='minor_stage', cascade='all, delete-orphan')
-    places_to_visit: Mapped[list['PlaceToVisit']] = relationship('PlaceToVisit', back_populates='minor_stage')
-
+   
+    places_to_visit: Mapped[list['PlaceToVisit']] = relationship(
+        'PlaceToVisit',
+        secondary='minor_stages_places_to_visit',
+        back_populates='minor_stages'
+    )
+     
     # Foreign keys to the parent
     major_stage_id: Mapped[int] = mapped_column(Integer, ForeignKey('major_stages.id', ondelete='CASCADE'), nullable=False)
 
@@ -255,9 +260,20 @@ class PlaceToVisit(db.Model):
     # Foreign keys to the parents
     user_id: Mapped[int] = mapped_column(Integer, ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
     custom_country_id: Mapped[int] = mapped_column(Integer, ForeignKey('custom_countries.id', ondelete='CASCADE'), nullable=True)
-    minor_stage_id: Mapped[int] = mapped_column(Integer, ForeignKey('minor_stages.id', ondelete='CASCADE'), nullable=True)
 
     # Define the relationships to the parents
     user: Mapped['User'] = relationship('User', back_populates='places_to_visit')
     custom_country: Mapped['CustomCountry'] = relationship('CustomCountry', back_populates='places_to_visit')
-    minor_stage: Mapped['MinorStage'] = relationship('MinorStage', back_populates='places_to_visit')
+    
+    minor_stages: Mapped[list['MinorStage']] = relationship(
+        'MinorStage',
+        secondary='minor_stages_places_to_visit',
+        back_populates='places_to_visit'
+    )
+    
+class MinorStagesPlacesToVisitLink(db.Model):
+    __tablename__ = 'minor_stages_places_to_visit'
+    __table_args__ = {'extend_existing': True}
+
+    minor_stage_id: Mapped[int] = mapped_column(Integer, ForeignKey('minor_stages.id', ondelete='CASCADE'), primary_key=True)
+    place_to_visit_id: Mapped[int] = mapped_column(Integer, ForeignKey('places_to_visit.id', ondelete='CASCADE'), primary_key=True)

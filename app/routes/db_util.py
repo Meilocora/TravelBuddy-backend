@@ -60,9 +60,7 @@ def fetch_custom_countries(current_user, journeyId):
         countryIds = [link.custom_country_id for link in links]
                 
         custom_countries = []
-        
-        # TODO: Hier current_user berücksichtigen?!
-        
+                
         for countryId in countryIds:
             custom_country = CustomCountry.query.filter_by(id=countryId).order_by(CustomCountry.name).first()
             custom_countries.append(custom_country)
@@ -224,7 +222,7 @@ def fetch_minor_stages(majorStageId):
             transportation = db.session.execute(db.select(Transportation).filter_by(minor_stage_id=minorStage.id)).scalars().first()
             accommodation = db.session.execute(db.select(Accommodation).filter_by(minor_stage_id=minorStage.id)).scalars().first()          
             activities = db.session.execute(db.select(Activity).filter_by(minor_stage_id=minorStage.id)).scalars().all()
-            places_to_visit = db.session.execute(db.select(PlaceToVisit).filter_by(minor_stage_id=minorStage.id)).scalars().all()
+            places_to_visit = minorStage.places_to_visit
                                            
             # Append the whole minor stage, that matches the model from frontend to the list
             minor_stage_data = {

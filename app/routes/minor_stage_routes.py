@@ -137,7 +137,7 @@ def update_minor_stage(current_user, majorStageId, minorStageId):
 
     spendings = db.session.execute(db.select(Spendings).join(Costs).filter(Costs.minor_stage_id == minorStageId)).scalars().all()
     transportation = db.session.execute(db.select(Transportation).filter_by(minor_stage_id=minorStageId)).scalars().first()
-    places_to_visit = db.session.execute(db.select(PlaceToVisit).filter_by(minor_stage_id=minorStageId)).scalars().all()
+    places_to_visit = old_minor_stage.places_to_visit
     activities = db.session.execute(db.select(Activity).filter_by(minor_stage_id=minorStageId)).scalars().all()
     
     
@@ -246,11 +246,6 @@ def delete_minor_stage(current_user, minorStageId):
 
         db.session.delete(minor_stage)
         db.session.commit()
-        
-        places_to_visit = db.session.execute(db.select(PlaceToVisit).filter_by(minor_stage_id=minorStageId)).scalars().all()
-        for place in places_to_visit:
-            place.minor_stage_id = None
-            db.session.commit()
         
         calculate_journey_costs(journey_costs)
         
