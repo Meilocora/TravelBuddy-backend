@@ -135,6 +135,7 @@ def update_country(current_user, customCountryId):
         return jsonify({'customCountryFormValues': response, 'status': 400})
         
     try:
+        # TODO: Add other infos here too
         # Update the country
         db.session.execute(db.update(CustomCountry).where(CustomCountry.id == customCountryId).values(
             visum_regulations=country['visum_regulations']['value'],
