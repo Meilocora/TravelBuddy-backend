@@ -1,5 +1,5 @@
 from db import db
-from app.models import Journey, Costs, Spendings, MajorStage, MinorStage, CustomCountry, JourneysCustomCountriesLink, Transportation, Accommodation, Activity, PlaceToVisit
+from app.models import Journey, Costs, Spendings, MajorStage, MinorStage, CustomCountry, JourneysCustomCountriesLink, Transportation, Accommodation, Activity, PlaceToVisit, Images
 from app.routes.util import formatDateToString, formatDateTimeToString
 from app.routes.util import calculate_time_zone_offset
 
@@ -295,3 +295,30 @@ def adjust_stages_orders(other_stages, new_order, old_order=None):
             if stage.position < old_order and stage.position >= new_order:
                 stage.position = stage.position + 1
         db.session.commit()
+        
+def fetch_images(current_user):
+    try:    
+        # Get all the images from the database
+        result = db.session.execute(db.select(Images).filter_by(user_id=current_user).order_by(Images.timestamp))
+        images = result.scalars().all()
+                
+        images_list = []
+        for image in images:
+            
+            # Append the whole journey, that matches the model from frontend to the list
+            image_data = {
+                'id': image.id,
+                'url': image.url,
+                'favorite': image.favorite,
+                'latitude': image.latitude,
+                'longitude': image.longitude,
+                'timestamp': formatDateTimeToString(image.timestamp),
+                'minorStageId': image.minor_stage_id,
+                'placeToVisitId': image.place_to_visit_id,
+            }
+            
+            images_list.append(image_data)
+        
+        return images_list
+    except Exception as e:
+        return e

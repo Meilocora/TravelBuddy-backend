@@ -112,9 +112,6 @@ def update_journey(current_user, journeyId):
         
     if not isValid:
         return jsonify({'journeyFormValues': response, 'status': 400})
-    
-    
-    
 
     money_exceeded = float(response['budget']['value']) < float(response['spent_money']['value'])
 

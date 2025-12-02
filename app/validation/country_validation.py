@@ -8,6 +8,8 @@ class CountryValidation(Validation):
   @staticmethod
   def validate_custom_country_update(country):
         errors = False
+        
+        # TODO: Add capital, code, population, regio, subregion, timezones, languages here too
       
         if CountryValidation().validate_string(country['visum_regulations']['value'], min_length=0, max_length=300):
             country['visum_regulations']['errors'].append(f", {CountryValidation().validate_string(country['visum_regulations']['value'], 0, 300)}")
