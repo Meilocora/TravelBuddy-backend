@@ -33,19 +33,19 @@ def add_image(current_user):
         new_image = Images(
             url = image['url']['value'],
             favorite=image['favorite']['value'],
-            latitude=image['latitude']['value'],
-            longitude=image['longitude']['value'],
+            latitude=image.get('latitude', {}).get('value', None),
+            longitude=image.get('longitude', {}).get('value', None),
             timestamp=parseDateTime(image['timestamp']['value']),
             description=image['description']['value'],
-            user_id=current_user.id,
-            minor_stage_id=image['minor_stage_id']['value'],
-            place_to_visit_id=image['place_to_visit_id']['value']
+            user_id=current_user,
+            minor_stage_id=image.get('minorStageId', {}).get('value', None),
+            place_to_visit_id=image.get('placeToVisitId', {}).get('value', None)
         )
          
         db.session.add(new_image)
         db.session.commit()
         
-        return jsonify({'image': new_image,'status': 201})
+        return jsonify({'status': 201})
     except Exception as e:
         return jsonify({'error': str(e)}, 500)
     

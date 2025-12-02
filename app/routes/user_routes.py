@@ -21,4 +21,4 @@ def get_user_data(current_user):
             currencyInfo = get_local_currency(latitude, longitude)
         except Exception as e:
             print(f"Error occurred: {e}")
-    return jsonify({'offset': user_time_zone_offset, 'status': 200, 'localCurrency': currencyInfo})
+    return jsonify({'userId' : current_user, 'offset': user_time_zone_offset, 'status': 200, 'localCurrency': currencyInfo})
