@@ -8,8 +8,6 @@ from app.routes.db_util import fetch_images
 
 image_bp = Blueprint('images', __name__)
 
-# TODO: What happens when a place or minorStage gets deleted? -> Cascade delete?
-
 @image_bp.route('/get-images', methods=['GET'])
 @token_required
 def get_images(current_user):

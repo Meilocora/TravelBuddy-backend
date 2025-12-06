@@ -128,7 +128,7 @@ class MinorStage(db.Model):
     transportations: Mapped['Transportation'] = relationship('Transportation', back_populates='minor_stage', cascade='all, delete-orphan')
     accommodations: Mapped[list['Accommodation']] = relationship('Accommodation', back_populates='minor_stage', cascade='all, delete-orphan')
     activities: Mapped[list['Activity']] = relationship('Activity', back_populates='minor_stage', cascade='all, delete-orphan')
-    images: Mapped[list['Images']] = relationship('Images', back_populates='minor_stage', cascade='all, delete-orphan')
+    images: Mapped[list['Images']] = relationship('Images', back_populates='minor_stage')
    
     places_to_visit: Mapped[list['PlaceToVisit']] = relationship(
         'PlaceToVisit',
@@ -274,7 +274,7 @@ class PlaceToVisit(db.Model):
     )
     
     # Define relationships to children
-    images: Mapped[list['Images']] = relationship('Images',back_populates='place_to_visit',cascade='all, delete-orphan')
+    images: Mapped[list['Images']] = relationship('Images',back_populates='place_to_visit')
     
 class MinorStagesPlacesToVisitLink(db.Model):
     __tablename__ = 'minor_stages_places_to_visit'
@@ -297,8 +297,8 @@ class Images(db.Model):
 
     # Foreign keys to the parents
     user_id: Mapped[int] = mapped_column(Integer, ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
-    minor_stage_id: Mapped[int] = mapped_column(Integer, ForeignKey('minor_stages.id', ondelete='CASCADE'), nullable=True)
-    place_to_visit_id: Mapped[int] = mapped_column(Integer, ForeignKey('places_to_visit.id', ondelete='CASCADE'), nullable=True)
+    minor_stage_id: Mapped[int] = mapped_column(Integer, ForeignKey('minor_stages.id', ondelete='SET NULL'), nullable=True)
+    place_to_visit_id: Mapped[int] = mapped_column(Integer, ForeignKey('places_to_visit.id', ondelete='SET NULL'), nullable=True)
 
     # Define the relationships to the parents
     user: Mapped['User'] = relationship('User', back_populates='images')
