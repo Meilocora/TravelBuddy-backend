@@ -8,6 +8,8 @@ from app.routes.db_util import fetch_images
 
 image_bp = Blueprint('images', __name__)
 
+# TODO: What happens when a place or minorStage gets deleted? -> Cascade delete?
+
 @image_bp.route('/get-images', methods=['GET'])
 @token_required
 def get_images(current_user):
@@ -55,6 +57,7 @@ def add_image(current_user):
 def update_image(current_user, imageId):
     try:
         image = request.get_json()
+        old_image = db.get_or_404(Images, imageId)
          
     except:
         return jsonify({'error': 'Unknown error'}, 400)
@@ -62,18 +65,18 @@ def update_image(current_user, imageId):
     try:
         # Update Image
         db.session.execute(db.update(Images).where(Images.id == imageId).values(
-            url = image['url']['value'],
+            url = old_image.url,
             favorite=image['favorite']['value'],
-            latitude=image['latitude']['value'],
-            longitude=image['longitude']['value'],
+            latitude=image.get('latitude', {}).get('value', None),
+            longitude=image.get('longitude', {}).get('value', None),
             timestamp=parseDateTime(image['timestamp']['value']),
             description=image['description']['value'],
-            minor_stage_id=image['minor_stage_id']['value'],
-            place_to_visit_id=image['place_to_visit_id']['value']
+            minor_stage_id=image.get('minorStageId', {}).get('value', None),
+            place_to_visit_id=image.get('placeToVisitId', {}).get('value', None)
         ))
         db.session.commit()
-        
-        return jsonify({'status': 201})
+                
+        return jsonify({'status': 200})
     except Exception as e:
         return jsonify({'error': str(e)}, 500)
     

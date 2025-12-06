@@ -315,6 +315,7 @@ def fetch_images(current_user):
                 'timestamp': formatDateTimeToString(image.timestamp),
                 'minorStageId': image.minor_stage_id,
                 'placeToVisitId': image.place_to_visit_id,
+                'description': image.description,
             }
             
             images_list.append(image_data)
