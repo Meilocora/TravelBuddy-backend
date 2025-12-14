@@ -15,7 +15,7 @@ class User(db.Model):
     journeys: Mapped[list['Journey']] = relationship('Journey', back_populates='user', cascade='all, delete-orphan')
     custom_countries: Mapped[list['CustomCountry']] = relationship('CustomCountry', back_populates='user', cascade='all, delete-orphan')
     places_to_visit: Mapped[list['PlaceToVisit']] = relationship('PlaceToVisit', back_populates='user', cascade='all, delete-orphan')
-    images: Mapped[list['Images']] = relationship('Images',back_populates='user',cascade='all, delete-orphan')
+    media: Mapped[list['Medium']] = relationship('Medium',back_populates='user',cascade='all, delete-orphan')
 
 class Journey(db.Model):
     __tablename__ = 'journeys'
@@ -128,7 +128,7 @@ class MinorStage(db.Model):
     transportations: Mapped['Transportation'] = relationship('Transportation', back_populates='minor_stage', cascade='all, delete-orphan')
     accommodations: Mapped[list['Accommodation']] = relationship('Accommodation', back_populates='minor_stage', cascade='all, delete-orphan')
     activities: Mapped[list['Activity']] = relationship('Activity', back_populates='minor_stage', cascade='all, delete-orphan')
-    images: Mapped[list['Images']] = relationship('Images', back_populates='minor_stage')
+    media: Mapped[list['Medium']] = relationship('Medium', back_populates='minor_stage')
    
     places_to_visit: Mapped[list['PlaceToVisit']] = relationship(
         'PlaceToVisit',
@@ -274,7 +274,7 @@ class PlaceToVisit(db.Model):
     )
     
     # Define relationships to children
-    images: Mapped[list['Images']] = relationship('Images',back_populates='place_to_visit')
+    media: Mapped[list['Medium']] = relationship('Medium',back_populates='place_to_visit')
     
 class MinorStagesPlacesToVisitLink(db.Model):
     __tablename__ = 'minor_stages_places_to_visit'
@@ -283,17 +283,20 @@ class MinorStagesPlacesToVisitLink(db.Model):
     minor_stage_id: Mapped[int] = mapped_column(Integer, ForeignKey('minor_stages.id', ondelete='CASCADE'), primary_key=True)
     place_to_visit_id: Mapped[int] = mapped_column(Integer, ForeignKey('places_to_visit.id', ondelete='CASCADE'), primary_key=True)
     
-class Images(db.Model):
-    __tablename__ = 'images'
+class Medium(db.Model):
+    __tablename__ = 'media'
     __table_args__ = {'extend_existing': True}
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    medium_type: Mapped[str] = mapped_column(String, nullable=False)
     url: Mapped[str] = mapped_column(String, nullable=False)
+    thumbnail_url: Mapped[str] = mapped_column(String, nullable=True)
     favorite: Mapped[bool] = mapped_column(Boolean, nullable=False)
     latitude: Mapped[float] = mapped_column(Float, nullable=True)
     longitude: Mapped[float] = mapped_column(Float, nullable=True)
     timestamp: Mapped[DateTime] = mapped_column(DateTime, nullable=False)
     description: Mapped[str] = mapped_column(String, nullable=True)
+    duration: Mapped[int] = mapped_column(Integer, nullable=True)
 
     # Foreign keys to the parents
     user_id: Mapped[int] = mapped_column(Integer, ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
@@ -301,6 +304,6 @@ class Images(db.Model):
     place_to_visit_id: Mapped[int] = mapped_column(Integer, ForeignKey('places_to_visit.id', ondelete='SET NULL'), nullable=True)
 
     # Define the relationships to the parents
-    user: Mapped['User'] = relationship('User', back_populates='images')
-    minor_stage: Mapped['MinorStage'] = relationship('MinorStage', back_populates='images')
-    place_to_visit: Mapped['PlaceToVisit'] = relationship('PlaceToVisit', back_populates='images')
+    user: Mapped['User'] = relationship('User', back_populates='media')
+    minor_stage: Mapped['MinorStage'] = relationship('MinorStage', back_populates='media')
+    place_to_visit: Mapped['PlaceToVisit'] = relationship('PlaceToVisit', back_populates='media')

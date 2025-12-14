@@ -1,5 +1,5 @@
 from db import db
-from app.models import Journey, Costs, Spendings, MajorStage, MinorStage, CustomCountry, JourneysCustomCountriesLink, Transportation, Accommodation, Activity, PlaceToVisit, Images
+from app.models import Journey, Costs, Spendings, MajorStage, MinorStage, CustomCountry, JourneysCustomCountriesLink, Transportation, Accommodation, Activity, PlaceToVisit, Medium
 from app.routes.util import formatDateToString, formatDateTimeToString
 from app.routes.util import calculate_time_zone_offset
 
@@ -296,30 +296,33 @@ def adjust_stages_orders(other_stages, new_order, old_order=None):
                 stage.position = stage.position + 1
         db.session.commit()
         
-def fetch_images(current_user):
+def fetch_media(current_user):
     try:    
-        # Get all the images from the database
-        result = db.session.execute(db.select(Images).filter_by(user_id=current_user).order_by(Images.timestamp))
-        images = result.scalars().all()
+        # Get all the media from the database
+        result = db.session.execute(db.select(Medium).filter_by(user_id=current_user).order_by(Medium.timestamp))
+        media = result.scalars().all()
                 
-        images_list = []
-        for image in images:
+        media_list = []
+        for medium in media:
             
             # Append the whole journey, that matches the model from frontend to the list
-            image_data = {
-                'id': image.id,
-                'url': image.url,
-                'favorite': image.favorite,
-                'latitude': image.latitude,
-                'longitude': image.longitude,
-                'timestamp': formatDateTimeToString(image.timestamp),
-                'minorStageId': image.minor_stage_id,
-                'placeToVisitId': image.place_to_visit_id,
-                'description': image.description,
+            medium_data = {
+                'id': medium.id,
+                'mediumType': medium.medium_type,
+                'url': medium.url,
+                'thumbnailUrl': medium.thumbnail_url,
+                'favorite': medium.favorite,
+                'latitude': medium.latitude,
+                'longitude': medium.longitude,
+                'timestamp': formatDateTimeToString(medium.timestamp),
+                'minorStageId': medium.minor_stage_id,
+                'placeToVisitId': medium.place_to_visit_id,
+                'description': medium.description,
+                'duration': medium.duration,
             }
             
-            images_list.append(image_data)
+            media_list.append(medium_data)
         
-        return images_list
+        return media_list
     except Exception as e:
         return e

@@ -1,0 +1,98 @@
+from flask import Blueprint, request, jsonify
+from app.routes.util import parseDateTime
+from db import db
+from app.routes.route_protection import token_required
+from app.models import Medium
+from app.routes.db_util import fetch_media
+
+
+medium_bp = Blueprint('medium', __name__)
+
+@medium_bp.route('/get-media', methods=['GET'])
+@token_required
+def get_media(current_user):
+    media_list = fetch_media(current_user=current_user)
+        
+    if not isinstance(media_list, Exception):   
+        return jsonify({'media': media_list, 'status': 200})
+    else:
+        return jsonify({'error': str(media_list)}, 500)
+
+
+@medium_bp.route('/add-medium', methods=['POST'])
+@token_required
+def add_media(current_user):
+    try:
+        medium = request.get_json()
+         
+    except:
+        return jsonify({'error': 'Unknown error'}, 400)
+
+    try:
+        # Create a new medium
+        new_medium = Medium(
+            medium_type = medium['mediumType']['value'],
+            url = medium['url']['value'],
+            thumbnail_url = medium.get('thumbnailUrl', {}).get('value', None),
+            favorite=medium['favorite']['value'],
+            latitude=medium.get('latitude', {}).get('value', None),
+            longitude=medium.get('longitude', {}).get('value', None),
+            timestamp=parseDateTime(medium['timestamp']['value']),
+            description=medium['description']['value'],
+            user_id=current_user,
+            minor_stage_id=medium.get('minorStageId', {}).get('value', None),
+            place_to_visit_id=medium.get('placeToVisitId', {}).get('value', None),
+            duration=medium.get('duration', {}).get('value', None)
+        )
+         
+        db.session.add(new_medium)
+        db.session.commit()
+        
+        return jsonify({'status': 201})
+    except Exception as e:
+        return jsonify({'error': str(e)}, 500)
+    
+
+@medium_bp.route('/update-medium/<int:mediumId>', methods=['POST'])
+@token_required
+def update_medium(current_user, mediumId):
+    try:
+        medium = request.get_json()
+        old_medium = db.get_or_404(Medium, mediumId)
+         
+    except:
+        return jsonify({'error': 'Unknown error'}, 400)
+
+    try:
+        # Update Medium
+        db.session.execute(db.update(Medium).where(Medium.id == mediumId).values(
+            medium_type = old_medium.medium_type,
+            url = old_medium.url,
+            thumbnail_url = old_medium.thumbnail_url,
+            favorite=medium['favorite']['value'],
+            latitude=medium.get('latitude', {}).get('value', None),
+            longitude=medium.get('longitude', {}).get('value', None),
+            timestamp=parseDateTime(medium['timestamp']['value']),
+            description=medium['description']['value'],
+            minor_stage_id=medium.get('minorStageId', {}).get('value', None),
+            place_to_visit_id=medium.get('placeToVisitId', {}).get('value', None),
+            duration=old_medium.duration
+        ))
+        db.session.commit()
+                
+        return jsonify({'status': 200})
+    except Exception as e:
+        return jsonify({'error': str(e)}, 500)
+    
+    
+@medium_bp.route('/delete-medium/<int:mediumId>', methods=['DELETE'])
+@token_required
+def delete_medium(current_user, mediumId):
+    try:        
+        medium = db.get_or_404(Medium, mediumId)        
+        # Delete the medium from the database
+        db.session.delete(medium)
+        db.session.commit()
+        return jsonify({'status': 200})
+    except Exception as e:
+        return jsonify({'error': str(e)}, 500)

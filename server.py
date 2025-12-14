@@ -18,7 +18,7 @@ from app.routes.transportation_routes import transportation_bp
 from app.routes.activity_routes import activity_bp
 from app.routes.spending_routes import spending_bp
 from app.routes.user_routes import user_bp
-from app.routes.image_routes import image_bp
+from app.routes.medium_routes import medium_bp
 
 # Load environment variables from .env file
 load_dotenv()
@@ -41,7 +41,7 @@ app.register_blueprint(transportation_bp, url_prefix='/transportation')
 app.register_blueprint(activity_bp, url_prefix='/activity')
 app.register_blueprint(spending_bp, url_prefix='/spending')
 app.register_blueprint(user_bp, url_prefix='/user')
-app.register_blueprint(image_bp, url_prefix='/images')
+app.register_blueprint(medium_bp, url_prefix='/medium')
 
 
 with app.app_context():
