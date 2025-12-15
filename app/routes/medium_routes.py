@@ -23,31 +23,30 @@ def get_media(current_user):
 @token_required
 def add_media(current_user):
     try:
-        medium = request.get_json()
-         
+        mediumData = request.get_json()
     except:
         return jsonify({'error': 'Unknown error'}, 400)
-
+    
     try:
         # Create a new medium
         new_medium = Medium(
-            medium_type = medium['mediumType']['value'],
-            url = medium['url']['value'],
-            thumbnail_url = medium.get('thumbnailUrl', {}).get('value', None),
-            favorite=medium['favorite']['value'],
-            latitude=medium.get('latitude', {}).get('value', None),
-            longitude=medium.get('longitude', {}).get('value', None),
-            timestamp=parseDateTime(medium['timestamp']['value']),
-            description=medium['description']['value'],
+            medium_type = mediumData['mediumType'],
+            url = mediumData['url']['value'],
+            thumbnail_url = mediumData.get('thumbnailUrl', None),
+            favorite=mediumData['favorite']['value'],
+            latitude=mediumData.get('latitude', {}).get('value', None),
+            longitude=mediumData.get('longitude', {}).get('value', None),
+            timestamp=parseDateTime(mediumData['timestamp']['value']),
+            description=mediumData['description']['value'],
+            duration=mediumData.get('duration', {}).get('value', None),
             user_id=current_user,
-            minor_stage_id=medium.get('minorStageId', {}).get('value', None),
-            place_to_visit_id=medium.get('placeToVisitId', {}).get('value', None),
-            duration=medium.get('duration', {}).get('value', None)
+            minor_stage_id=mediumData.get('minorStageId', {}).get('value', None),
+            place_to_visit_id=mediumData.get('placeToVisitId', {}).get('value', None),
         )
          
         db.session.add(new_medium)
         db.session.commit()
-        
+
         return jsonify({'status': 201})
     except Exception as e:
         return jsonify({'error': str(e)}, 500)
