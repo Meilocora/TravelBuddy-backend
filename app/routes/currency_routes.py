@@ -19,7 +19,6 @@ def create_currency(current_user):
         return jsonify({'currencyFormValues': response, 'status': 400})
     
     try:
-        print('Creating currency:', currency)
         # Create a new currency
         new_currency = Currency(
             code=currency['code']['value'],
@@ -29,7 +28,6 @@ def create_currency(current_user):
             user_id=current_user
         )
         
-        print('New currency object:', new_currency)
         db.session.add(new_currency)
         db.session.commit()
         
