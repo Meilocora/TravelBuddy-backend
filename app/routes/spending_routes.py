@@ -116,5 +116,5 @@ def delete_spending(current_user, spendingId):
 @spending_bp.route('/get-currencies', methods=['GET'])
 @token_required
 def get_currencies(current_user):
-    currencies = get_all_currencies()        
+    currencies = get_all_currencies(current_user)        
     return jsonify({'currencies': currencies, 'status': 200})

@@ -116,7 +116,7 @@ def create_place(current_user):
     
 @place_bp.route('/update-place/<int:placeId>', methods=['POST'])
 @token_required
-def update_journey(current_user, placeId):
+def update_place(current_user, placeId):
     try:
         place = request.get_json()
     except:

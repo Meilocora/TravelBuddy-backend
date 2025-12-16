@@ -5,7 +5,7 @@ from currency_converter import CurrencyConverter
 from timezonefinder import TimezoneFinder
 import pytz
 from db import db
-from app.models import Journey, Costs, Spendings, Transportation, MajorStage, MinorStage, Accommodation, Activity
+from app.models import Journey, Costs, Spendings, Transportation, MajorStage, MinorStage, Accommodation, Activity, Currency
 
 
 def parseDate(dateString: str): 
@@ -148,23 +148,37 @@ def get_currency_info(currency_code, locale_str='en_US'):
         }
 
 
-def get_all_currencies():
+def get_all_currencies(current_user):
     try:
-        currencies = c.currencies
-        
         currency_list = []
         
+        # Get currencies from database for current user
+        user_currencies = db.session.execute(db.select(Currency).filter_by(user_id=current_user)).scalars().all()
+        for currency in user_currencies:
+            currency_list.append({
+                'id': currency.id,
+                'code': currency.code,
+                'name': currency.name,
+                'symbol': currency.symbol,
+                'conversionRate': currency.conversion_rate
+            })
+        
+        # Get currencies from CurrencyConverter
+        currencies = c.currencies
+        
         for currency_code in sorted(currencies):
-            info = get_currency_info(currency_code)
-            conversion_rate = get_conversion_rate(currency_code)
-            
-            if conversion_rate is not None:
-                currency_list.append({
-                    'code': info['code'],
-                    'name': info['name'],
-                    'symbol': info['symbol'],
-                    'conversionRate': conversion_rate
-                })       
+            # Check if currency already exists in list
+            if not any(c['code'] == currency_code for c in currency_list):
+                info = get_currency_info(currency_code)
+                conversion_rate = get_conversion_rate(currency_code)
+                
+                if conversion_rate is not None:
+                    currency_list.append({
+                        'code': info['code'],
+                        'name': info['name'],
+                        'symbol': info['symbol'],
+                        'conversionRate': conversion_rate
+                    })
         
         return currency_list
     except Exception as e:

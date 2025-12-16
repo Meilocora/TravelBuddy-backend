@@ -2,7 +2,6 @@ from flask import Blueprint, request, jsonify
 from db import db
 from countryinfo import CountryInfo
 from app.models import CustomCountry, Journey, PlaceToVisit
-from app.validation.country_validation import CountryValidation
 from app.routes.route_protection import token_required
 from app.routes.util import safe_countryinfo_attr
 import re
@@ -47,7 +46,6 @@ def get_custom_countries(current_user):
             response_custom_countries.append({'id': custom_country.id,
                                               'name': custom_country.name,
                                               'code': custom_country.code,
-                                              'timezones': custom_country.timezones.split(',') if custom_country.timezones else None, 
                                               'currencies': custom_country.currencies.split(',') if custom_country.currencies else None,
                                               'languages': custom_country.languages.split(',') if custom_country.languages else None,
                                               'capital': custom_country.capital,
@@ -104,7 +102,6 @@ def create_custom_country(current_user):
             response_country = {'id': new_country.id,
                                 'name': new_country.name,
                                 'code': new_country.code,
-                                'timezones': new_country.timezones.split(',') if new_country.timezones else None,
                                 'currencies': new_country.currencies.split(',') if new_country.currencies else None,
                                 'languages': new_country.languages.split(',') if new_country.languages else None,
                                 'capital': new_country.capital,
@@ -116,7 +113,6 @@ def create_custom_country(current_user):
         
         return jsonify({'customCountry': response_country,'status': 201})
     except Exception as e:
-        print(e)
         return jsonify({'error': str(e), 'status': 500})
     
 
@@ -129,26 +125,35 @@ def update_country(current_user, customCountryId):
     except:
         return jsonify({'error': 'Unknown error'}, 400)
     
-    response, isValid = CountryValidation.validate_custom_country_update(country=country)
+    # Convert list inputs to comma-separated strings
+    languages_value = country.get('languages', {}).get('value', '')
+    country_languages = ','.join(languages_value) if isinstance(languages_value, list) else languages_value
     
-    if not isValid:
-        return jsonify({'customCountryFormValues': response, 'status': 400})
+    currency_value = country.get('currencies', {}).get('value', '')
+    country_currencies = ','.join(currency_value) if isinstance(currency_value, list) else currency_value
+    
+    
         
     try:
-        # TODO: Add other infos here too
         # Update the country
         db.session.execute(db.update(CustomCountry).where(CustomCountry.id == customCountryId).values(
-            visum_regulations=country['visum_regulations']['value'],
-            best_time_to_visit=country['best_time_to_visit']['value'],
-            general_information=country['general_information']['value'],
+            currencies=country_currencies,
+            languages=country_languages,
+            capital=country.get('capital', {}).get('value', None),
+            population=country.get('population', {}).get('value', None),
+            region=country.get('region', {}).get('value', None),
+            subregion=country.get('subregion', {}).get('value', None),
+            visum_regulations=country.get('visum_regulations', {}).get('value', None),
+            best_time_to_visit=country.get('best_time_to_visit', {}).get('value', None),
+            general_information=country.get('general_information', {}).get('value', None),
         ))
+        
         db.session.commit()
             
         country = db.get_or_404(CustomCountry, customCountryId)
         response_country = {'id': country.id,
                             'name': country.name,
                             'code': country.code,
-                            'timezones': country.timezones.split(',') if country.timezones else None,
                             'currencies': country.currencies.split(',') if country.currencies else None,
                             'languages': country.languages.split(',') if country.languages else None,
                             'capital': country.capital,

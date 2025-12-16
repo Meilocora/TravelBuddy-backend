@@ -16,6 +16,7 @@ class User(db.Model):
     custom_countries: Mapped[list['CustomCountry']] = relationship('CustomCountry', back_populates='user', cascade='all, delete-orphan')
     places_to_visit: Mapped[list['PlaceToVisit']] = relationship('PlaceToVisit', back_populates='user', cascade='all, delete-orphan')
     media: Mapped[list['Medium']] = relationship('Medium',back_populates='user',cascade='all, delete-orphan')
+    currencies: Mapped[list['Currency']] = relationship('Currency', back_populates='user', cascade='all, delete-orphan')
 
 class Journey(db.Model):
     __tablename__ = 'journeys'
@@ -52,7 +53,6 @@ class CustomCountry(db.Model):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     name: Mapped[str] = mapped_column(String, nullable=False)
     code: Mapped[str] = mapped_column(String, nullable=True)
-    timezones: Mapped[str] = mapped_column(String, nullable=True)
     currencies: Mapped[str] = mapped_column(String, nullable=True)
     languages: Mapped[str] = mapped_column(String, nullable=True)
     capital: Mapped[str] = mapped_column(String, nullable=True)
@@ -307,3 +307,19 @@ class Medium(db.Model):
     user: Mapped['User'] = relationship('User', back_populates='media')
     minor_stage: Mapped['MinorStage'] = relationship('MinorStage', back_populates='media')
     place_to_visit: Mapped['PlaceToVisit'] = relationship('PlaceToVisit', back_populates='media')
+
+class Currency(db.Model):
+    __tablename__ = 'currencies'
+    __table_args__ = {'extend_existing': True}
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    code: Mapped[str] = mapped_column(String, nullable=False)
+    name: Mapped[str] = mapped_column(String, nullable=False)
+    symbol: Mapped[str] = mapped_column(String, nullable=False)
+    conversion_rate: Mapped[float] = mapped_column(Float, nullable=False)
+
+    # Foreign keys to the parent
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
+
+    # Define the relationship to the parent
+    user: Mapped['User'] = relationship('User', back_populates='currencies')
