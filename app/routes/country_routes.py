@@ -45,7 +45,6 @@ def get_custom_countries(current_user):
             
             response_custom_countries.append({'id': custom_country.id,
                                               'name': custom_country.name,
-                                              'code': custom_country.code,
                                               'currencies': custom_country.currencies.split(',') if custom_country.currencies else None,
                                               'languages': custom_country.languages.split(',') if custom_country.languages else None,
                                               'capital': custom_country.capital,
@@ -88,7 +87,6 @@ def create_custom_country(current_user):
                 region = safe_countryinfo_attr(countryInfo, 'region'),
                 subregion = safe_countryinfo_attr(countryInfo, 'subregion'),
                 wiki_link = safe_countryinfo_attr(countryInfo, 'wiki'),
-                code = safe_countryinfo_attr(countryInfo, 'iso') ,
                 visited = False,
                 visum_regulations = None,
                 best_time_to_visit = None,
@@ -101,7 +99,6 @@ def create_custom_country(current_user):
             
             response_country = {'id': new_country.id,
                                 'name': new_country.name,
-                                'code': new_country.code,
                                 'currencies': new_country.currencies.split(',') if new_country.currencies else None,
                                 'languages': new_country.languages.split(',') if new_country.languages else None,
                                 'capital': new_country.capital,
@@ -153,7 +150,6 @@ def update_country(current_user, customCountryId):
         country = db.get_or_404(CustomCountry, customCountryId)
         response_country = {'id': country.id,
                             'name': country.name,
-                            'code': country.code,
                             'currencies': country.currencies.split(',') if country.currencies else None,
                             'languages': country.languages.split(',') if country.languages else None,
                             'capital': country.capital,
