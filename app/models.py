@@ -52,7 +52,6 @@ class CustomCountry(db.Model):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     name: Mapped[str] = mapped_column(String, nullable=False)
-    code: Mapped[str] = mapped_column(String, nullable=True)
     currencies: Mapped[str] = mapped_column(String, nullable=True)
     languages: Mapped[str] = mapped_column(String, nullable=True)
     capital: Mapped[str] = mapped_column(String, nullable=True)

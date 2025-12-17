@@ -76,7 +76,6 @@ def fetch_custom_countries(current_user, journeyId):
             
             response_custom_countries.append({'id': custom_country.id,
                                               'name': custom_country.name,
-                                              'code': custom_country.code,
                                               'currencies': custom_country.currencies.split(',') if custom_country.currencies else None,
                                               'languages': custom_country.languages.split(',') if custom_country.languages else None,
                                               'capital': custom_country.capital,
@@ -184,7 +183,6 @@ def fetch_custom_country(current_user, countryName):
             
         response_custom_country = {'id': custom_country.id,
                                             'name': custom_country.name,
-                                            'code': custom_country.code,
                                             'currencies': custom_country.currencies.split(',') if custom_country.currencies else None,
                                             'languages': custom_country.languages.split(',') if custom_country.languages else None,
                                             'capital': custom_country.capital,
