@@ -100,9 +100,9 @@ def delete_medium(current_user, mediumId):
 @token_required
 def delete_media(current_user):
     try:
-        data = request.get_json()
+        data = request.get_json()        
         mediumIds = data if isinstance(data, list) else data.get('ids', [])
-        
+                
         if not isinstance(mediumIds, list) or len(mediumIds) == 0:
             return jsonify({'error': 'Invalid or empty ids list'}), 400
         
@@ -111,8 +111,9 @@ def delete_media(current_user):
             if not medium:
                 return jsonify({'error': f'Medium with id {mediumId} not found'}), 404
             db.session.delete(medium)
-        
+                    
         db.session.commit()
+                
         return jsonify({'status': 200}), 200
     except Exception as e:
         db.session.rollback()
