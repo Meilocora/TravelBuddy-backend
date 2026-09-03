@@ -6,6 +6,11 @@ from app.routes.util import get_users_stages_titles, parseDate, formatDateToStri
 from app.models import Costs, Spendings, MajorStage, MinorStage, Transportation, Accommodation, Activity, PlaceToVisit
 from app.validation.minor_stage_validation import MinorStageValidation
 from app.routes.util import calculate_journey_costs
+from app.routes.resource_access import (
+    get_user_major_stage,
+    get_user_minor_stage,
+    get_user_minor_stages_by_ids,
+)
 
 minor_stage_bp = Blueprint('minor_stage', __name__)
   
@@ -14,6 +19,14 @@ minor_stage_bp = Blueprint('minor_stage', __name__)
 @token_required
 def create_minor_stage(current_user, majorStageId):    
     try:
+        major_stage = get_user_major_stage(
+            current_user,
+            majorStageId
+        )
+
+        if major_stage is None:
+            return jsonify({'error': 'Major stage not found'}), 404
+
         minor_stage = request.get_json()
         result = db.session.execute(db.select(MinorStage).filter_by(major_stage_id=majorStageId))
         existing_minor_stages = result.scalars().all()
@@ -25,7 +38,7 @@ def create_minor_stage(current_user, majorStageId):
                 
         major_stage_costs = db.session.execute(db.select(Costs).filter_by(major_stage_id=majorStageId)).scalars().first()
 
-        journey_id = db.session.execute(db.select(MajorStage).filter_by(id=majorStageId)).scalars().first().journey_id
+        journey_id = major_stage.journey_id
         journey_costs = db.session.execute(db.select(Costs).filter_by(journey_id=journey_id)).scalars().first()
         
     except:
@@ -110,10 +123,18 @@ def create_minor_stage(current_user, majorStageId):
 @token_required
 def update_minor_stage(current_user, majorStageId, minorStageId):
     try:
+        old_minor_stage = get_user_minor_stage(
+                    current_user,
+                    minorStageId,
+                    major_stage_id=majorStageId,
+                )
+        
+        if old_minor_stage is None:
+            return jsonify({'error': 'Minor stage not found'}), 404
+                
         minor_stage = request.get_json()
         result = db.session.execute(db.select(MinorStage).filter(MinorStage.id!=minorStageId, MinorStage.major_stage_id==majorStageId))
         existing_minor_stages = result.scalars().all()
-        old_minor_stage = db.get_or_404(MinorStage, minorStageId)
         assigned_titles = get_users_stages_titles(current_user)
         
         existing_minor_stages_costs = []
@@ -232,13 +253,20 @@ def update_minor_stage(current_user, majorStageId, minorStageId):
 @minor_stage_bp.route('/delete-minor-stage/<int:minorStageId>', methods=['DELETE'])
 @token_required
 def delete_minor_stage(current_user, minorStageId):
+    minor_stage = get_user_minor_stage(
+                current_user,
+                minorStageId,
+                major_stage_id=major_stage_id,
+            )
+    
+    if minor_stage is None:
+        return jsonify({'error': 'Minor stage not found'}), 404
+            
     major_stage_id = db.session.execute(db.select(MinorStage).filter_by(id=minorStageId)).scalars().first().major_stage_id
     major_stage = db.session.execute(db.select(MajorStage).filter_by(id=major_stage_id)).scalars().first()
     journey_id = major_stage.journey_id
     journey_costs = db.session.execute(db.select(Costs).filter_by(journey_id=journey_id)).scalars().first()
-    try:        
-        minor_stage = db.get_or_404(MinorStage, minorStageId)
-        
+    try:                      
         # Adjust orders of existing major stages if necessary
         if minor_stage.position < len(major_stage.minor_stages):
             later_minor_stages = [other_minor_stage for other_minor_stage in major_stage.minor_stages if other_minor_stage.position > minor_stage.position]

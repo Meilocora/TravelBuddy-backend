@@ -3,6 +3,7 @@ from db import db
 from app.routes.route_protection import token_required
 from app.routes.util import parseDate, formatDateToString, get_all_currencies, get_conversion_rate
 from app.models import Costs, Journey,  MinorStage, MajorStage, Spendings
+from app.routes.resource_access import get_user_minor_stage, get_user_spending
 from app.validation.spending_validation import SpendingValidation
 from app.routes.util import calculate_journey_costs
 
@@ -12,8 +13,15 @@ spending_bp = Blueprint('spending', __name__)
 @token_required 
 def create_spending(current_user, minorStageId):
     try:
+        minor_stage = get_user_minor_stage(
+            current_user,
+            minorStageId
+        )
+        
+        if minor_stage is None:
+            return jsonify({'error': 'Minor stage not found'}), 404
+        
         spending = request.get_json()
-        minor_stage = db.get_or_404(MinorStage, minorStageId)
         major_stage = db.get_or_404(MajorStage, minor_stage.major_stage_id)
         journey = db.get_or_404(Journey, major_stage.journey_id)
         journey_costs = db.session.execute(db.select(Costs).filter_by(journey_id=journey.id)).scalars().first()
@@ -56,9 +64,19 @@ def create_spending(current_user, minorStageId):
 @token_required 
 def update_spending(current_user, minorStageId, spendingId):
     try:
+        minor_stage = get_user_minor_stage(
+            current_user,
+            minorStageId
+        )
+        old_spending = get_user_spending(
+            current_user,
+            spendingId
+        )
+        
+        if minor_stage is None or old_spending is None:
+            return jsonify({'error': 'Resource not found'}), 404
+                
         new_spending = request.get_json()
-        old_spending = db.get_or_404(Spendings, spendingId)
-        minor_stage = db.get_or_404(MinorStage, minorStageId)
         major_stage = db.get_or_404(MajorStage, minor_stage.major_stage_id)
         journey = db.get_or_404(Journey, major_stage.journey_id)
         journey_costs = db.session.execute(db.select(Costs).filter_by(journey_id=journey.id)).scalars().first()
@@ -97,6 +115,15 @@ def update_spending(current_user, minorStageId, spendingId):
 @token_required
 def delete_spending(current_user, spendingId):
     spending = db.get_or_404(Spendings, spendingId)
+    
+    spending = get_user_spending(
+        current_user,
+        spendingId
+    )
+    
+    if spending is None:
+        return jsonify({'error': 'Spending not found'}), 404
+    
     costs = db.get_or_404(Costs, spending.costs_id)
     minor_stage = db.get_or_404(MinorStage, costs.minor_stage_id)
     major_stage = db.get_or_404(MajorStage, minor_stage.major_stage_id)

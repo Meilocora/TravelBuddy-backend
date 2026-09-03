@@ -1,4 +1,5 @@
 from flask import Blueprint, jsonify, request
+from app.routes.resource_access import get_user_major_stage, get_user_minor_stage, get_user_transportation
 from db import db
 from app.routes.route_protection import token_required
 from app.routes.util import parseDateTime, formatDateTimeToString
@@ -12,8 +13,14 @@ transportation_bp = Blueprint('transportation', __name__)
 @token_required 
 def create_major_stage_transportation(current_user, majorStageId):
     try:
+        major_stage = get_user_major_stage(
+            current_user,
+            majorStageId
+        )
+        if major_stage is None:
+            return jsonify({'error': 'Major stage not found'}), 404
+        
         transportation = request.get_json()
-        major_stage = db.get_or_404(MajorStage, majorStageId)
         journey = db.get_or_404(Journey, major_stage.journey_id)
         journey_costs = db.session.execute(db.select(Costs).filter_by(journey_id=journey.id)).scalars().first()
          
@@ -71,8 +78,14 @@ def create_major_stage_transportation(current_user, majorStageId):
 @token_required 
 def create_minor_stage_transportation(current_user, minorStageId):
     try:
+        minor_stage = get_user_minor_stage(
+            current_user,
+            minorStageId
+        )
+        if minor_stage is None:
+            return jsonify({'error': 'Minor stage not found'}), 404
+                
         transportation = request.get_json()
-        minor_stage = db.get_or_404(MinorStage, minorStageId)
         major_stage = db.get_or_404(MajorStage, minor_stage.major_stage_id)        
         journey = db.get_or_404(Journey, major_stage.journey_id)
         journey_costs = db.session.execute(db.select(Costs).filter_by(journey_id=journey.id)).scalars().first()
@@ -132,9 +145,19 @@ def create_minor_stage_transportation(current_user, minorStageId):
 @token_required 
 def update_major_stage_transportation(current_user, majorStageId, transportationId):
     try:
+        major_stage = get_user_major_stage(
+            current_user,
+            majorStageId
+        )
+        old_transportation = get_user_transportation(
+            current_user,
+            transportationId
+        )
+        
+        if major_stage is None or old_transportation is None:
+            return jsonify({'error': 'Resource not found'}), 404
+        
         new_transportation = request.get_json()
-        old_transportation = db.get_or_404(Transportation, transportationId)
-        major_stage = db.get_or_404(MajorStage, majorStageId)
         journey = db.get_or_404(Journey, major_stage.journey_id)
         journey_costs = db.session.execute(db.select(Costs).filter_by(journey_id=journey.id)).scalars().first()
          
@@ -188,9 +211,20 @@ def update_major_stage_transportation(current_user, majorStageId, transportation
 @token_required 
 def update_minor_stage_transportation(current_user, minorStageId, transportationId):
     try:
+        minor_stage = get_user_minor_stage(
+            current_user,
+            minorStageId
+        )
+        old_transportation = get_user_transportation(
+            current_user,
+            transportationId
+        )
+        
+        if minor_stage is None or old_transportation is None:
+            return jsonify({'error': 'Resource not found'}), 404
+        
+        
         new_transportation = request.get_json()
-        old_transportation = db.get_or_404(Transportation, transportationId)
-        minor_stage = db.get_or_404(MinorStage, minorStageId)
         major_stage = db.get_or_404(MajorStage, minor_stage.major_stage_id)
         journey = db.get_or_404(Journey, major_stage.journey_id)
         journey_costs = db.session.execute(db.select(Costs).filter_by(journey_id=journey.id)).scalars().first()
@@ -245,6 +279,14 @@ def update_minor_stage_transportation(current_user, minorStageId, transportation
 @transportation_bp.route('/delete-major-stage-transportation/<int:majorStageId>', methods=['DELETE'])
 @token_required
 def delete_major_stage_transportation(current_user, majorStageId):
+    major_stage = get_user_major_stage(
+        current_user,
+        majorStageId
+    )
+    if major_stage is None:
+        return jsonify({'error': 'Resource not found'}), 404
+    
+    
     journey = db.session.execute(db.select(Journey).join(MajorStage).filter(MajorStage.id == majorStageId)).scalars().first()
     journey_costs = db.session.execute(db.select(Costs).filter_by(journey_id=journey.id)).scalars().first()
     try:        
@@ -261,7 +303,13 @@ def delete_major_stage_transportation(current_user, majorStageId):
 @transportation_bp.route('/delete-minor-stage-transportation/<int:minorStageId>', methods=['DELETE'])
 @token_required
 def delete_minor_stage_transportation(current_user, minorStageId):
-    minor_stage = db.get_or_404(MinorStage, minorStageId)
+    minor_stage = get_user_minor_stage(
+        current_user,
+        minorStageId
+    )
+    if minor_stage is None:
+        return jsonify({'error': 'Resource not found'}), 404
+    
     major_stage = db.get_or_404(MajorStage, minor_stage.major_stage_id)
     journey = db.session.execute(db.select(Journey).join(MajorStage).filter(MajorStage.id == major_stage.id)).scalars().first()
     journey_costs = db.session.execute(db.select(Costs).filter_by(journey_id=journey.id)).scalars().first()

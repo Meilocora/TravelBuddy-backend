@@ -51,6 +51,7 @@ with app.app_context():
     
 
 HOST = os.getenv('HOST')
+DEBUG = os.getenv('FLASK_DEBUG', 'false').lower() == 'true'
 
 if __name__ == '__main__':
-    app.run(host=HOST, debug=True, port=5001)
+    app.run(host=HOST, debug=DEBUG, port=5001)

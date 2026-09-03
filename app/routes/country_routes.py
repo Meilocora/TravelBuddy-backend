@@ -1,4 +1,5 @@
 from flask import Blueprint, request, jsonify
+from app.routes.resource_access import get_user_custom_country
 from db import db
 from countryinfo import CountryInfo
 from app.models import CustomCountry, Journey, PlaceToVisit
@@ -118,6 +119,14 @@ def create_custom_country(current_user):
 @token_required
 def update_country(current_user, customCountryId):
     try:
+        custom_country = get_user_custom_country(
+            current_user,
+            customCountryId
+        )
+
+        if custom_country is None:
+            return jsonify({'error': 'Custom country not found'}), 404
+        
         country = request.get_json()
     except:
         return jsonify({'error': 'Unknown error'}, 400)
@@ -130,7 +139,6 @@ def update_country(current_user, customCountryId):
     country_currencies = ','.join(currency_value) if isinstance(currency_value, list) else currency_value
     
     
-        
     try:
         # Update the country
         db.session.execute(db.update(CustomCountry).where(CustomCountry.id == customCountryId).values(
@@ -147,20 +155,19 @@ def update_country(current_user, customCountryId):
         
         db.session.commit()
             
-        country = db.get_or_404(CustomCountry, customCountryId)
-        response_country = {'id': country.id,
-                            'name': country.name,
-                            'currencies': country.currencies.split(',') if country.currencies else None,
-                            'languages': country.languages.split(',') if country.languages else None,
-                            'capital': country.capital,
-                            'population': country.population,
-                            'region': country.region,
-                            'subregion': country.subregion,
-                            'wiki_link': country.wiki_link, 
-                            'visited': country.visited,
-                            'visum_regulations': country.visum_regulations,
-                            'best_time_to_visit': country.best_time_to_visit,
-                            'general_information': country.general_information
+        response_country = {'id': custom_country.id,
+                            'name': custom_country.name,
+                            'currencies': custom_country.currencies.split(',') if custom_country.currencies else None,
+                            'languages': custom_country.languages.split(',') if custom_country.languages else None,
+                            'capital': custom_country.capital,
+                            'population': custom_country.population,
+                            'region': custom_country.region,
+                            'subregion': custom_country.subregion,
+                            'wiki_link': custom_country.wiki_link, 
+                            'visited': custom_country.visited,
+                            'visum_regulations': custom_country.visum_regulations,
+                            'best_time_to_visit': custom_country.best_time_to_visit,
+                            'general_information': custom_country.general_information
                             }
         
         return jsonify({'customCountry': response_country,'status': 200})
@@ -173,7 +180,15 @@ def update_country(current_user, customCountryId):
 @token_required
 def delete_custom_country(current_user, customCountryId):
     try:
-        countryName = CustomCountry.query.filter_by(id=customCountryId).first().name
+        custom_country = get_user_custom_country(
+            current_user,
+            customCountryId
+        )
+
+        if custom_country is None:
+            return jsonify({'error': 'Custom country not found'}), 404
+
+        countryName = custom_country.name
         
         # Check if country is linked to a Journey
         result = db.session.execute(db.select(Journey).filter_by(user_id=current_user))
@@ -189,7 +204,6 @@ def delete_custom_country(current_user, customCountryId):
             place_to_delete = db.get_or_404(PlaceToVisit, place.id)
             db.session.delete(place_to_delete)
         
-        custom_country = db.get_or_404(CustomCountry, customCountryId)
         db.session.delete(custom_country)
         db.session.commit()
         return jsonify({'countryName': countryName, 'status': 200})

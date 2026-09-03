@@ -4,6 +4,7 @@ from db import db
 from app.routes.route_protection import token_required
 from app.models import Medium
 from app.routes.db_util import fetch_media
+from app.routes.resource_access import get_user_medium
 
 
 medium_bp = Blueprint('medium', __name__)
@@ -57,7 +58,15 @@ def add_media(current_user):
 def update_medium(current_user, mediumId):
     try:
         medium = request.get_json()
-        old_medium = db.get_or_404(Medium, mediumId)
+        
+        old_medium = get_user_medium(
+            current_user,
+            mediumId
+        )
+
+        if old_medium is None:
+            return jsonify({'error': 'Medium not found'}), 404
+        
     except:
         return jsonify({'error': 'Unknown error'}, 400)
 
@@ -87,7 +96,13 @@ def update_medium(current_user, mediumId):
 @token_required
 def delete_medium(current_user, mediumId):
     try:        
-        medium = db.get_or_404(Medium, mediumId)        
+        medium = get_user_medium(
+                    current_user,
+                    mediumId
+                )
+        
+        if medium is None:
+            return jsonify({'error': 'Medium not found'}), 404    
         # Delete the medium from the database
         db.session.delete(medium)
         db.session.commit()

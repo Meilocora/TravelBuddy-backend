@@ -6,6 +6,11 @@ from app.routes.route_protection import token_required
 from app.routes.util import parseDate, formatDateToString, formatDateTimeToString, get_users_stages_titles
 from app.models import Costs, Journey, Spendings, MajorStage, Transportation, MinorStage
 from app.validation.major_stage_validation import MajorStageValidation
+from app.routes.resource_access import (
+    get_user_journey,
+    get_user_major_stage,
+    get_user_major_stages_by_ids,
+)
 
 major_stage_bp = Blueprint('major_stage', __name__)   
 
@@ -13,6 +18,11 @@ major_stage_bp = Blueprint('major_stage', __name__)
 @token_required
 def create_major_stage(current_user, journeyId):
     try:
+        journey = get_user_journey(current_user, journeyId)
+
+        if journey is None:
+            return jsonify({'error': 'Journey not found'}), 404
+
         major_stage = request.get_json()
         result = db.session.execute(db.select(MajorStage).filter_by(journey_id=journeyId))
         existing_major_stages = result.scalars().all()
@@ -89,7 +99,16 @@ def update_major_stage(current_user, journeyId, majorStageId):
         minor_stages = db.session.execute(db.select(MinorStage).filter_by(major_stage_id=majorStageId)).scalars().all()
         result = db.session.execute(db.select(MajorStage).filter(MajorStage.id != majorStageId, MajorStage.journey_id==journeyId))
         existing_major_stages = result.scalars().all()
-        old_major_stage = db.get_or_404(MajorStage, majorStageId)
+        
+        old_major_stage = get_user_major_stage(
+            current_user,
+            majorStageId,
+            journey_id=journeyId,
+        )
+
+        if old_major_stage is None:
+            return jsonify({'error': 'Major stage not found'}), 404
+        
         assigned_titles = get_users_stages_titles(current_user)
 
     
@@ -186,8 +205,15 @@ def update_major_stage(current_user, journeyId, majorStageId):
 def delete_major_stage(current_user, majorStageId):
     journey = db.session.execute(db.select(Journey).join(MajorStage).filter(MajorStage.id == majorStageId)).scalars().first()
     journey_costs = db.session.execute(db.select(Costs).filter_by(journey_id=journey.id)).scalars().first()
-    try:        
-        major_stage = db.get_or_404(MajorStage, majorStageId)
+    try:             
+        major_stage = get_user_major_stage(
+            current_user,
+            majorStageId,
+            journey_id=journey.id,
+        )
+
+        if major_stage is None:
+            return jsonify({'error': 'Major stage not found'}), 404
         # Adjust orders of existing major stages if necessary
         if major_stage.position < len(journey.major_stages):
             later_major_stages = [other_major_stage for other_major_stage in journey.major_stages if other_major_stage.position > major_stage.position]
@@ -206,12 +232,37 @@ def delete_major_stage(current_user, majorStageId):
 @major_stage_bp.route('/swap-major-stages', methods=['POST'])
 @token_required
 def swap_major_stages(current_user):
-    stagesPositionList = request.get_json()["stagesPositionList"]
-    try:
-        for item in stagesPositionList:
-            db.session.execute(db.update(MajorStage).where(MajorStage.id == int(item['id'])).values(position=item['position']))
-        db.session.commit()
-        
-        return jsonify({'status': 200})
-    except Exception as e:
-        return jsonify({'error': str(e)}, 500)
+
+    data = request.get_json()
+    positions = data.get('stagesPositionList', [])
+
+    stage_ids = [
+        int(item['id'])
+        for item in positions
+    ]
+
+    owned_stages = get_user_major_stages_by_ids(
+        current_user,
+        stage_ids
+    )
+
+    owned_ids = {
+        stage.id
+        for stage in owned_stages
+    }
+
+    if owned_ids != set(stage_ids):
+        return jsonify({
+            'error': 'One or more stages not found'
+        }), 404
+
+    for item in positions:
+        db.session.execute(
+            db.update(MajorStage)
+            .where(MajorStage.id == int(item['id']))
+            .values(position=item['position'])
+        )
+
+    db.session.commit()
+
+    return jsonify({'status': 200}), 200

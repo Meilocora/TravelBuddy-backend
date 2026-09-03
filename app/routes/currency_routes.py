@@ -1,4 +1,5 @@
 from flask import Blueprint, request, jsonify
+from app.routes.resource_access import get_user_currency
 from app.validation.currency_validation import CurrencyValidation
 from db import db
 from app.models import Currency
@@ -40,6 +41,13 @@ def create_currency(current_user):
 @token_required
 def update_currency(current_user, currencyId):
     try:
+        old_currency = get_user_currency(
+            current_user,
+            currencyId
+        )
+        if old_currency is None:
+            return jsonify({'error': 'Currency not found'}), 404
+        
         currency = request.get_json()
     except:
         return jsonify({'error': 'Unknown error'}, 400)
@@ -69,7 +77,13 @@ def update_currency(current_user, currencyId):
 @token_required
 def delete_currency(current_user, currencyId):
     try:
-        currency_to_delete = db.get_or_404(Currency, currencyId)
+        currency_to_delete = get_user_currency(
+                    current_user,
+                    currencyId
+                )
+        if currency_to_delete is None:
+            return jsonify({'error': 'Currency not found'}), 404
+                
         db.session.delete(currency_to_delete)
         db.session.commit()
         

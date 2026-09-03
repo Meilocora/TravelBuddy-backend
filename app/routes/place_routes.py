@@ -1,8 +1,10 @@
 from flask import Blueprint, request, jsonify
+from app.routes.resource_access import get_user_minor_stage, get_user_place
 from db import db
 from app.models import PlaceToVisit, CustomCountry, MinorStage
 from app.validation.place_validation import PlaceValidation
 from app.routes.route_protection import token_required
+
 
 place_bp = Blueprint('place-to-visit', __name__)
 
@@ -38,6 +40,15 @@ def get_places(current_user):
 @token_required
 def get_places_by_country(current_user, minorStageId, countryName):
     try:        
+        minor_stage = get_user_minor_stage(
+                    current_user,
+                    minorStageId,
+                    major_stage_id=None,
+                )
+        
+        if minor_stage is None:
+            return None
+            
         country = db.session.execute(db.select(CustomCountry).filter_by(user_id = current_user, name=countryName)).scalars().first()
         result = db.session.execute(db.select(PlaceToVisit).filter_by(user_id=current_user, custom_country_id=country.id))
         places = result.scalars().all()
@@ -118,11 +129,17 @@ def create_place(current_user):
 @token_required
 def update_place(current_user, placeId):
     try:
+        old_place = get_user_place(
+                current_user,
+                placeId
+            )
+        
+        if old_place is None:
+            return jsonify({'error': 'Place not found'}), 404
+        
         place = request.get_json()
     except:
         return jsonify({'error': 'Unknown error'}, 400)
-    
-    old_place = db.get_or_404(PlaceToVisit, placeId)
     
     response, isValid = PlaceValidation.validate_place(place=place)
     
@@ -167,8 +184,13 @@ def update_place(current_user, placeId):
 @token_required
 def toggle_favorite_place(current_user, placeId):
     try:
-        
-        old_place = db.get_or_404(PlaceToVisit, placeId)
+        old_place = get_user_place(
+            current_user,
+            placeId
+        )
+
+        if old_place is None:
+            return jsonify({'error': 'Place not found'}), 404
         
         # Update the place
         db.session.execute(db.update(PlaceToVisit).where(PlaceToVisit.id == placeId).values(
@@ -185,7 +207,15 @@ def toggle_favorite_place(current_user, placeId):
 @token_required
 def toggle_visited_place(current_user, placeId):
     try:
-        old_place = db.get_or_404(PlaceToVisit, placeId)
+        old_place = get_user_place(
+            current_user,
+            placeId
+        )
+
+        if old_place is None:
+            return jsonify({'error': 'Place not found'}), 404
+
+
         new_visited_status = not old_place.visited
         
         # Update the place
@@ -221,7 +251,14 @@ def toggle_visited_place(current_user, placeId):
 @token_required
 def delete_place(current_user, placeId):
     try:
-        place_to_visit = db.get_or_404(PlaceToVisit, placeId)
+        place_to_visit = get_user_place(
+            current_user,
+            placeId
+        )
+
+        if place_to_visit is None:
+            return jsonify({'error': 'Place not found'}), 404
+        
         custom_country_id = place_to_visit.custom_country_id
         
         other_places = db.session.execute(
@@ -249,8 +286,15 @@ def delete_place(current_user, placeId):
 @token_required
 def add_minor_stage_to_place(current_user, placeId, minorStageId):
     try:
-        place = db.get_or_404(PlaceToVisit, placeId)
-        minor_stage = db.get_or_404(MinorStage, minorStageId)
+        place = get_user_place(current_user, placeId)
+        minor_stage = get_user_minor_stage(
+            current_user,
+            minorStageId
+        )
+
+        if place is None or minor_stage is None:
+            return jsonify({'error': 'Resource not found'}), 404
+
         
         # Prüfe ob Zuordnung bereits existiert
         if minor_stage not in place.minor_stages:
@@ -265,8 +309,15 @@ def add_minor_stage_to_place(current_user, placeId, minorStageId):
 @token_required
 def remove_minor_stage_from_place(current_user, placeId, minorStageId):
     try:
-        place = db.get_or_404(PlaceToVisit, placeId)
-        minor_stage = db.get_or_404(MinorStage, minorStageId)
+        place = get_user_place(current_user, placeId)
+        minor_stage = get_user_minor_stage(
+            current_user,
+            minorStageId
+        )
+
+        if place is None or minor_stage is None:
+            return jsonify({'error': 'Resource not found'}), 404
+
         
         if minor_stage in place.minor_stages:
             place.minor_stages.remove(minor_stage)

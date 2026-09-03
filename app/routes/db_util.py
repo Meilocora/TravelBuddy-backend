@@ -1,3 +1,4 @@
+from app.routes.resource_access import get_user_journey
 from db import db
 from app.models import Journey, Costs, Spendings, MajorStage, MinorStage, CustomCountry, JourneysCustomCountriesLink, Transportation, Accommodation, Activity, PlaceToVisit, Medium
 from app.routes.util import formatDateToString, formatDateTimeToString
@@ -56,6 +57,11 @@ def fetch_journeys(current_user):
 
 def fetch_custom_countries(current_user, journeyId):
     try:        
+        journey = get_user_journey(current_user, journeyId)
+
+        if journey is None:
+            return None
+
         links = db.session.execute(db.select(JourneysCustomCountriesLink).filter_by(journey_id=journeyId)).scalars().all()
         countryIds = [link.custom_country_id for link in links]
                 
@@ -97,6 +103,9 @@ def fetch_custom_countries(current_user, journeyId):
 
 def fetch_major_stages(current_user, journeyId):
     try:
+        journey = get_user_journey(current_user, journeyId)
+        if journey is None:
+            return None
         # Get all the major stages from the database
         result = db.session.execute(db.select(MajorStage).filter_by(journey_id=journeyId).order_by(MajorStage.position))
         majorStages = result.scalars().all()

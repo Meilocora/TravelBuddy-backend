@@ -4,6 +4,10 @@ from app.routes.route_protection import token_required
 from app.models import Costs, Journey,  MinorStage, MajorStage, Activity
 from app.validation.activity_validation import ActivityValidation
 from app.routes.util import calculate_journey_costs
+from app.routes.resource_access import (
+    get_user_minor_stage,
+    get_user_activity,
+)
 
 activity_bp = Blueprint('activity', __name__)
 
@@ -12,7 +16,15 @@ activity_bp = Blueprint('activity', __name__)
 def create_activity(current_user, minorStageId):
     try:
         activity = request.get_json()
-        minor_stage = db.get_or_404(MinorStage, minorStageId)
+                
+        minor_stage = get_user_minor_stage(
+            current_user,
+            minorStageId
+        )
+
+        if minor_stage is None:
+            return jsonify({'error': 'Minor stage not found'}), 404
+        
         major_stage = db.get_or_404(MajorStage, minor_stage.major_stage_id)
         journey = db.get_or_404(Journey, major_stage.journey_id)
         journey_costs = db.session.execute(db.select(Costs).filter_by(journey_id=journey.id)).scalars().first()
@@ -63,9 +75,16 @@ def create_activity(current_user, minorStageId):
 @token_required 
 def update_activity(current_user, minorStageId, activityId):
     try:
+        old_activity = get_user_activity(
+            current_user,
+            activityId
+        )
+        minor_stage = get_user_minor_stage(current_user, minorStageId)
+
+        if old_activity is None or minor_stage is None:
+            return jsonify({'error': 'Resource not found'}), 404
+        
         new_activity = request.get_json()
-        old_activity = db.get_or_404(Activity, activityId)
-        minor_stage = db.get_or_404(MinorStage, minorStageId)
         major_stage = db.get_or_404(MajorStage, minor_stage.major_stage_id)
         journey = db.get_or_404(Journey, major_stage.journey_id)
         journey_costs = db.session.execute(db.select(Costs).filter_by(journey_id=journey.id)).scalars().first()
@@ -113,7 +132,15 @@ def update_activity(current_user, minorStageId, activityId):
 @activity_bp.route('/delete-activity/<int:activityId>', methods=['DELETE'])
 @token_required
 def delete_activity(current_user, activityId):
-    activity = db.get_or_404(Activity, activityId)
+
+    activity = get_user_activity(
+        current_user,
+        activityId
+    )
+
+    if activity is None:
+        return jsonify({'error': 'Activity not found'}), 404
+
     minor_stage = db.get_or_404(MinorStage, activity.minor_stage_id)
     major_stage = db.get_or_404(MajorStage, minor_stage.major_stage_id)
     journey = db.session.execute(db.select(Journey).join(MajorStage).filter(MajorStage.id == major_stage.id)).scalars().first()

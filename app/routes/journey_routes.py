@@ -5,6 +5,7 @@ from app.routes.util import parseDate, formatDateToString, get_users_stages_titl
 from app.models import Journey, Costs, Spendings, MajorStage,  CustomCountry, JourneysCustomCountriesLink
 from app.validation.journey_validation import JourneyValidation
 from app.routes.db_util import fetch_journeys
+from app.routes.resource_access import get_user_journey
 
 journey_bp = Blueprint('journey', __name__)
 
@@ -104,7 +105,11 @@ def update_journey(current_user, journeyId):
         major_stages = db.session.execute(db.select(MajorStage).filter_by(journey_id=journeyId)).scalars().all()
         existing_journeys = result.scalars().all()
         assigned_titles = get_users_stages_titles(current_user)
-        old_journey = db.get_or_404(Journey, journeyId)
+        old_journey = get_user_journey(current_user, journeyId)
+
+        if old_journey is None:
+            return jsonify({'error': 'Journey not found'}), 404
+        
     except:
         return jsonify({'error': 'Unknown error'}, 400)
     
@@ -197,7 +202,11 @@ def update_journey(current_user, journeyId):
 def delete_journey(current_user, journeyId):
     try:        
         # Delete connected entries in the link table
-        journey = db.get_or_404(Journey, journeyId)
+        journey = get_user_journey(current_user, journeyId)
+
+        if journey is None:
+            return jsonify({'error': 'Journey not found'}), 404
+        
         countries = journey.countries.split(', ')
         for country in countries:
             result = db.session.execute(db.select(CustomCountry).filter_by(name=country, user_id=current_user))
