@@ -31,13 +31,16 @@ def create_spending(current_user, minorStageId):
         journey = db.get_or_404(Journey, major_stage.journey_id)
         journey_costs = db.session.execute(db.select(Costs).filter_by(journey_id=journey.id)).scalars().first()
          
-    except:
-        return jsonify({'error': 'Unknown error'}, 400) 
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            "error": "Internal server error"
+        }), 500
     
     response, isValid = SpendingValidation.validate_spending(spending)
     
     if not isValid:
-        return jsonify({'spendingFormValues': response, 'status': 400})
+        return jsonify({'spendingFormValues': response}), 400
     
     try:
         # Create a new spending
@@ -60,9 +63,10 @@ def create_spending(current_user, minorStageId):
                                 'date': formatDateToString(new_spending.date),
                                 'category': new_spending.category}
         
-        return jsonify({'spending': response_spending, 'backendJourneyId': journey.id, 'status': 201})
+        return jsonify({'spending': response_spending, 'backendJourneyId': journey.id}), 201
     except Exception as e:
-        return jsonify({'error': str(e)}, 500)
+        db.session.rollback()
+        return jsonify({'error': 'Internal server error'}), 500
     
     
 @spending_bp.route('/update-spending/<int:minorStageId>/<int:spendingId>', methods=['POST'])
@@ -87,12 +91,13 @@ def update_spending(current_user, minorStageId, spendingId):
         journey_costs = db.session.execute(db.select(Costs).filter_by(journey_id=journey.id)).scalars().first()
          
     except:
-        return jsonify({'error': 'Unknown error'}, 400) 
+        db.session.rollback()
+        return jsonify({'error': 'Internal server error'}), 500
     
     response, isValid = SpendingValidation.validate_spending(new_spending)
         
     if not isValid:
-        return jsonify({'spendingFormValues': response, 'status': 400})
+        return jsonify({'spendingFormValues': response}), 400
     
     try:
         # Update old spending
@@ -111,9 +116,10 @@ def update_spending(current_user, minorStageId, spendingId):
                                     'date': new_spending['date']['value'],
                                     'category': new_spending['category']['value']}
 
-        return jsonify({'spending': response_spending, 'backendJourneyId': journey.id, 'status': 200})
+        return jsonify({'spending': response_spending, 'backendJourneyId': journey.id}), 200
     except Exception as e:
-        return jsonify({'error': str(e)}, 500)
+        db.session.rollback()
+        return jsonify({'error': 'Internal server error'}), 500
 
     
 @spending_bp.route('/delete-spending/<int:spendingId>', methods=['DELETE'])
@@ -140,13 +146,14 @@ def delete_spending(current_user, spendingId):
         
         calculate_journey_costs(journey_costs)
         
-        return jsonify({'status': 200, 'backendJourneyId': journey.id})
+        return jsonify({'backendJourneyId': journey.id}), 200
     except Exception as e:
-        return jsonify({'error': str(e)}, 500)
+        db.session.rollback()
+        return jsonify({'error': 'Internal server error'}), 500
     
 
 @spending_bp.route('/get-currencies', methods=['GET'])
 @token_required
 def get_currencies(current_user):
     currencies = get_all_currencies(current_user)        
-    return jsonify({'currencies': currencies, 'status': 200})
+    return jsonify({'currencies': currencies}), 200

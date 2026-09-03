@@ -31,9 +31,12 @@ def get_places(current_user):
                 'link': place.link,
                 'minorStageIds': [stage.id for stage in place.minor_stages]
             })    
-        return jsonify({'places': places_list, 'status': 200})
+        return jsonify({'places': places_list}), 200
     except Exception as e:
-        return jsonify({'error': str(e)}, 500)
+        db.session.rollback()
+        return jsonify({
+            "error": "Internal server error"
+        }), 500
     
     
 @place_bp.route('/get-available-places-by-country/<int:minorStageId>/<string:countryName>', methods=['GET'])
@@ -70,9 +73,10 @@ def get_places_by_country(current_user, minorStageId, countryName):
                 'minorStageIds': stage_ids,
             })    
                     
-        return jsonify({'places': places_list, 'countryId': country.id, 'status': 200})
+        return jsonify({'places': places_list, 'countryId': country.id}), 200
     except Exception as e:
-        return jsonify({'error': str(e)}, 500)
+        db.session.rollback()
+        return jsonify({'error': 'Internal server error'}), 500
     
     
 @place_bp.route('/create-place', methods=['POST'])
@@ -81,11 +85,11 @@ def create_place(current_user):
     try:
         place = request.get_json()
     except:
-        return jsonify({'error': 'Unknown error'}, 400) 
+        return jsonify({'error': 'Unknown error'}), 400 
         
     response, isValid = PlaceValidation.validate_place(place=place)
     if not isValid:
-        return jsonify({'placeFormValues': response, 'status': 400})
+        return jsonify({'placeFormValues': response}), 400
     
 
     
@@ -120,9 +124,10 @@ def create_place(current_user):
                 'minorStageIds': []
                 }
         
-        return jsonify({'place': response_place,'status': 201})
+        return jsonify({'place': response_place}), 201
     except Exception as e:
-        return jsonify({'error': str(e)}, 500)
+        db.session.rollback()
+        return jsonify({'error': 'Internal server error'}), 500
     
     
 @place_bp.route('/update-place/<int:placeId>', methods=['POST'])
@@ -139,12 +144,12 @@ def update_place(current_user, placeId):
         
         place = request.get_json()
     except:
-        return jsonify({'error': 'Unknown error'}, 400)
+        return jsonify({'error': 'Unknown error'}), 400
     
     response, isValid = PlaceValidation.validate_place(place=place)
     
     if not isValid:
-        return jsonify({'placeFormValues': response, 'status': 400})
+        return jsonify({'placeFormValues': response}), 400
         
     try:
          # Remove line breaks from the name
@@ -175,9 +180,10 @@ def update_place(current_user, placeId):
                 }
         
         
-        return jsonify({'place': response_place,'status': 200})
+        return jsonify({'place': response_place}), 200
     except Exception as e:
-        return jsonify({'error': str(e)}, 500)
+        db.session.rollback()
+        return jsonify({'error': 'Internal server error'}), 500
         
     
 @place_bp.route('/toggle-favorite-place/<int:placeId>', methods=['POST'])
@@ -198,9 +204,10 @@ def toggle_favorite_place(current_user, placeId):
         ))
         db.session.commit()
 
-        return jsonify({'status': 200})
+        return jsonify({'status': 200}), 200
     except Exception as e:
-        return jsonify({'error': str(e)}, 500)
+        db.session.rollback()
+        return jsonify({'error': 'Internal server error'}), 500
     
     
 @place_bp.route('/toggle-visited-place/<int:placeId>', methods=['POST'])
@@ -244,7 +251,8 @@ def toggle_visited_place(current_user, placeId):
         
         return jsonify({'status': 200})
     except Exception as e:
-        return jsonify({'error': str(e)}, 500)
+        db.session.rollback()
+        return jsonify({'error': 'Internal server error'}), 500
 
     
 @place_bp.route('/delete-place/<int:placeId>', methods=['DELETE'])
@@ -279,7 +287,8 @@ def delete_place(current_user, placeId):
         db.session.commit()
         return jsonify({'status': 200})
     except Exception as e:
-        return jsonify({'error': str(e)}, 500)
+        db.session.rollback()
+        return jsonify({'error': 'Internal server error'}), 500
     
     
 @place_bp.route('/add-minor-stage-to-place/<int:placeId>/<int:minorStageId>', methods=['POST'])
@@ -303,7 +312,8 @@ def add_minor_stage_to_place(current_user, placeId, minorStageId):
 
         return jsonify({'status': 200})
     except Exception as e:
-        return jsonify({'error': str(e)}, 500)
+        db.session.rollback()
+        return jsonify({'error': 'Internal server error'}), 500
     
 @place_bp.route('/remove-minor-stage-from-place/<int:placeId>/<int:minorStageId>', methods=['POST'])
 @token_required
@@ -325,4 +335,5 @@ def remove_minor_stage_from_place(current_user, placeId, minorStageId):
 
         return jsonify({'status': 200})
     except Exception as e:
-        return jsonify({'error': str(e)}, 500)
+        db.session.rollback()
+        return jsonify({'error': 'Internal server error'}), 500

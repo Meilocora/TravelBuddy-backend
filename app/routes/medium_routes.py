@@ -15,9 +15,9 @@ def get_media(current_user):
     media_list = fetch_media(current_user=current_user)
         
     if not isinstance(media_list, Exception):   
-        return jsonify({'media': media_list, 'status': 200})
+        return jsonify({'media': media_list})
     else:
-        return jsonify({'error': str(media_list)}, 500)
+        return jsonify({'error': str(media_list)}), 500
 
 
 @medium_bp.route('/add-medium', methods=['POST'])
@@ -26,7 +26,7 @@ def add_media(current_user):
     try:
         mediumData = request.get_json()
     except:
-        return jsonify({'error': 'Unknown error'}, 400)
+        return jsonify({'error': 'Internal server error'}), 400
     
     try:
         # Create a new medium
@@ -50,7 +50,8 @@ def add_media(current_user):
 
         return jsonify({'status': 201})
     except Exception as e:
-        return jsonify({'error': str(e)}, 500)
+        db.session.rollback()
+        return jsonify({'error': 'Internal server error'}), 500
     
 
 @medium_bp.route('/update-medium/<int:mediumId>', methods=['POST'])
@@ -68,7 +69,8 @@ def update_medium(current_user, mediumId):
             return jsonify({'error': 'Medium not found'}), 404
         
     except:
-        return jsonify({'error': 'Unknown error'}, 400)
+        db.session.rollback()
+        return jsonify({'error': 'Internal server error'}), 500
 
     try:
         # Update Medium
@@ -89,7 +91,8 @@ def update_medium(current_user, mediumId):
                 
         return jsonify({'status': 200})
     except Exception as e:
-        return jsonify({'error': str(e)}, 500)
+        db.session.rollback()
+        return jsonify({'error': 'Internal server error'}), 500
     
     
 @medium_bp.route('/delete-medium/<int:mediumId>', methods=['DELETE'])
@@ -108,7 +111,8 @@ def delete_medium(current_user, mediumId):
         db.session.commit()
         return jsonify({'status': 200})
     except Exception as e:
-        return jsonify({'error': str(e)}, 500)
+        db.session.rollback()
+        return jsonify({'error': 'Internal server error'}), 500
     
 
 # @medium_bp.route('/delete-media', methods=['DELETE'])
@@ -173,16 +177,9 @@ def delete_media(current_user):
         # Only delete after all IDs have been validated
         for medium in media:
             db.session.delete(medium)
-
         db.session.commit()
 
-        return jsonify({
-            "status": 200
-        }), 200
-
-    except Exception:
+        return jsonify({'status': 200})
+    except Exception as e:
         db.session.rollback()
-
-        return jsonify({
-            "error": "Internal server error"
-        }), 500
+        return jsonify({'error': 'Internal server error'}), 500

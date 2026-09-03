@@ -52,7 +52,7 @@ def login():
         if user and bcrypt.checkpw(loginData['password']['value'].encode('utf-8'), user.password.encode('utf-8')):
             token = create_access_token(user)
             refresh_token = create_refresh_token(user)
-            return jsonify({'status': 200, 'token': token, 'refreshToken': refresh_token})
+            return jsonify({'token': token, 'refreshToken': refresh_token}), 200
         else:
             return jsonify({'error': 'Invalid credentials'}), 401
     except Exception as e:
@@ -103,7 +103,7 @@ def register():
         
         return jsonify({'token': token, 'refreshToken': refresh_token}), 201
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return jsonify({'error': 'Internal server error'}), 500
   
 
 @auth_bp.route('/refresh-token', methods=['POST'])
@@ -135,7 +135,7 @@ def refresh_token():
 
         return jsonify({'newToken': new_token, 'newRefreshToken': new_refresh_token}), 200
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return jsonify({'error': 'Internal server error'}), 500
  
  
 @auth_bp.route('/get-user-infos', methods=['GET'])
@@ -144,7 +144,7 @@ def get_user_infos(current_user):
     user_info = db.get_or_404(User, current_user)
     
     if not isinstance(user_info, Exception):
-        return jsonify({'username': user_info.username, 'email': user_info.email, 'status': 200})
+        return jsonify({'username': user_info.username, 'email': user_info.email}),200
     else:
         return jsonify({'error': str(user_info)}), 500
 
@@ -170,9 +170,9 @@ def change_username(current_user):
         ))
         db.session.commit()
     except Exception as e:
-        return jsonify({'error': str(e)}), 400
+        return jsonify({'error': 'Internal server error'}), 500
     else:
-        return jsonify({'newUsername': nameFormValues['newUsername']['value'], 'status': 200})
+        return jsonify({'newUsername': nameFormValues['newUsername']['value']}), 200
     
     
 @auth_bp.route('/change-password', methods=['POST'])
@@ -200,6 +200,6 @@ def change_password(current_user):
         ))
         db.session.commit()
     except Exception as e:
-        return jsonify({'error': str(e)}), 400
+        return jsonify({'error': 'Internal server error'}), 500
     else:
         return jsonify({'status': 200})

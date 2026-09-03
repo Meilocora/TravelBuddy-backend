@@ -1,7 +1,7 @@
 import re
 
 from countryinfo import CountryInfo
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, current_app, jsonify, request
 
 from app.models import CustomCountry, Journey, PlaceToVisit
 from app.routes.resource_access import get_user_custom_country
@@ -27,9 +27,12 @@ def get_countries(current_user, country_name):
                 else:
                     countries_list.append(country.capitalize())             
         
-        return jsonify({'countries': countries_list, 'status': 200})
-    except Exception as e:
-        return jsonify({'error': str(e), 'status': 500})
+        return jsonify({'countries': countries_list}), 200
+    except Exception:
+        db.session.rollback()
+        return jsonify({
+            "error": "Internal server error"
+        }), 500
     
 
 @country_bp.route('/get-custom-countries', methods=['GET'])
@@ -62,9 +65,12 @@ def get_custom_countries(current_user):
                                                 'placesToVisit': places_to_visit
                                               })
         
-        return jsonify({'customCountries': response_custom_countries, 'status': 200})
+        return jsonify({'customCountries': response_custom_countries}), 200
     except Exception as e:
-        return jsonify({'error': str(e), 'status': 500})
+        db.session.rollback()
+        return jsonify({
+            "error": "Internal server error"
+        }), 500
     
 
 @country_bp.route('/create-custom-country', methods=['POST'])
@@ -74,10 +80,10 @@ def create_custom_country(current_user):
         country_name = request.get_json()['countryName']
         country_exists = CustomCountry.query.filter_by(name=country_name, user_id=current_user).first()
         if country_exists:
-            return jsonify({'error': 'Country already exists', 'status': 400})
+            return jsonify({'error': 'Country already exists'}), 400
         
-        if country_name.lower() not in CountryInfo().all().keys():
-            return jsonify({'error': 'Country does not exist', 'status': 400})
+        if country_name.lower() not in CountryInfo().all():
+            return jsonify({'error': 'Country does not exist'}), 400
         else:
             countryInfo = CountryInfo(country_name)           
 
@@ -111,9 +117,12 @@ def create_custom_country(current_user):
                                 'wiki_link': new_country.wiki_link, 
                                 }
         
-        return jsonify({'customCountry': response_country,'status': 201})
+        return jsonify({'customCountry': response_country}), 201
     except Exception as e:
-        return jsonify({'error': str(e), 'status': 500})
+        db.session.rollback()
+        return jsonify({
+            "error": "Internal server error"
+        }), 500
     
 
     
@@ -131,7 +140,7 @@ def update_country(current_user, customCountryId):
         
         country = request.get_json()
     except:
-        return jsonify({'error': 'Unknown error'}, 400)
+        return jsonify({'error': 'Unknown error'}), 400
     
     # Convert list inputs to comma-separated strings
     languages_value = country.get('languages', {}).get('value', '')
@@ -172,9 +181,12 @@ def update_country(current_user, customCountryId):
                             'general_information': custom_country.general_information
                             }
         
-        return jsonify({'customCountry': response_country,'status': 200})
+        return jsonify({'customCountry': response_country}), 200
     except Exception as e:
-        return jsonify({'error': str(e)}, 500)
+        db.session.rollback()
+        return jsonify({
+            "error": "Internal server error"
+        }), 500
         
     
     
@@ -198,7 +210,7 @@ def delete_custom_country(current_user, customCountryId):
         for journey in journeys:
             countries = journey.countries.split(',')
             if countryName in countries:
-                return jsonify({'error': f'Country is linked to a "{journey.name}". Please delete the Journey first.', 'status': 400})
+                return jsonify({'error': f'Country is linked to a "{journey.name}". Please delete the Journey first.'}), 400
         
         # Delete all Places To Visit aswell
         places = PlaceToVisit.query.filter_by(custom_country_id=customCountryId).all()
@@ -208,6 +220,9 @@ def delete_custom_country(current_user, customCountryId):
         
         db.session.delete(custom_country)
         db.session.commit()
-        return jsonify({'countryName': countryName, 'status': 200})
+        return jsonify({'countryName': countryName}), 200
     except Exception as e:
-        return jsonify({'error': str(e)}, 500)
+        db.session.rollback()
+        return jsonify({
+            "error": "Internal server error"
+        }), 500

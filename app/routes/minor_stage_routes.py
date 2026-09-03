@@ -55,12 +55,13 @@ def create_minor_stage(current_user, majorStageId):
         journey_costs = db.session.execute(db.select(Costs).filter_by(journey_id=journey_id)).scalars().first()
         
     except:
-        return jsonify({'error': 'Unknown error'}, 400) 
+        db.session.rollback()
+        return jsonify({'error': 'Internal server error'}), 500 
     
     response, isValid = MinorStageValidation.validate_minor_stage(minor_stage, existing_minor_stages, existing_minor_stages_costs, major_stage_costs, assigned_titles)  
     
     if not isValid:
-        return jsonify({'minorStageFormValues': response, 'status': 400})
+        return jsonify({'minorStageFormValues': response}), 400
     
     try:
          # Adjust orders of existing major stages if necessary
@@ -127,9 +128,10 @@ def create_minor_stage(current_user, majorStageId):
                                 }
         }
         
-        return jsonify({'minorStage': response_minor_stage,'status': 201})
+        return jsonify({'minorStage': response_minor_stage}), 201
     except Exception as e:
-        return jsonify({'error': str(e)}, 500)
+        db.session.rollback()
+        return jsonify({'error': 'Internal server error'}), 500
     
     
 @minor_stage_bp.route('/update-minor-stage/<int:majorStageId>/<int:minorStageId>', methods=['POST'])
@@ -160,12 +162,13 @@ def update_minor_stage(current_user, majorStageId, minorStageId):
         journey_costs = db.session.execute(db.select(Costs).filter_by(journey_id=journey_id)).scalars().first()
         
     except:
-        return jsonify({'error': 'Unknown error'}, 400) 
+        db.session.rollback()
+        return jsonify({'error': 'Internal server error'}), 500 
     
     response, isValid = MinorStageValidation.validate_minor_stage(minor_stage, existing_minor_stages, existing_minor_stages_costs, major_stage_costs, assigned_titles, old_minor_stage)
 
     if not isValid:
-        return jsonify({'minorStageFormValues': response, 'status': 400})
+        return jsonify({'minorStageFormValues': response}), 400
 
     money_exceeded = float(response['budget']['value']) < float(response['spent_money']['value'])
 
@@ -258,9 +261,10 @@ def update_minor_stage(current_user, majorStageId, minorStageId):
         if places_to_visit is not None:
                 response_minor_stage['placesToVisit'] = [{'countryId': place_to_visit.custom_country_id ,'id': place_to_visit.id, 'name': place_to_visit.name, 'description': place_to_visit.description, 'visited': place_to_visit.visited, 'favorite': place_to_visit.favorite, 'latitude': place_to_visit.latitude, 'longitude': place_to_visit.longitude, 'link': place_to_visit.link} for place_to_visit in places_to_visit]
 
-        return jsonify({'minorStage': response_minor_stage,'status': 200})
+        return jsonify({'minorStage': response_minor_stage}), 200
     except Exception as e:
-        return jsonify({'error': str(e)}, 500)
+        db.session.rollback()
+        return jsonify({'error': 'Internal server error'}), 500
     
 
 @minor_stage_bp.route('/delete-minor-stage/<int:minorStageId>', methods=['DELETE'])
@@ -268,8 +272,7 @@ def update_minor_stage(current_user, majorStageId, minorStageId):
 def delete_minor_stage(current_user, minorStageId):
     minor_stage = get_user_minor_stage(
                 current_user,
-                minorStageId,
-                major_stage_id=major_stage_id,
+                minorStageId
             )
     
     if minor_stage is None:
@@ -292,7 +295,8 @@ def delete_minor_stage(current_user, minorStageId):
         
         return jsonify({'status': 200})
     except Exception as e:
-        return jsonify({'error': str(e)}, 500)
+        db.session.rollback()
+        return jsonify({'error': 'Internal server error'}), 500
 
 
 @minor_stage_bp.route('/swap-minor-stages', methods=['POST'])
@@ -306,4 +310,5 @@ def swap_minor_stages(current_user):
         
         return jsonify({'status': 200})
     except Exception as e:
-        return jsonify({'error': str(e)}, 500)
+        db.session.rollback()
+        return jsonify({'error': 'Internal server error'}), 500

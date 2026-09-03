@@ -41,13 +41,16 @@ def create_major_stage(current_user, journeyId):
         
         journey_costs = db.session.execute(db.select(Costs).filter_by(journey_id=journeyId)).scalars().first()
          
-    except:
-        return jsonify({'error': 'Unknown error'}, 400) 
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            "error": "Internal server error"
+        }), 500
     
     response, isValid = MajorStageValidation.validate_major_stage(major_stage, existing_major_stages, existing_major_stages_costs, journey_costs, assigned_titles)
     
     if not isValid:
-        return jsonify({'majorStageFormValues': response, 'status': 400})
+        return jsonify({'majorStageFormValues': response}), 400
     
     try:
         # Adjust orders of existing major stages if necessary
@@ -92,9 +95,12 @@ def create_major_stage(current_user, journeyId):
                                 },  
                                 'minorStagesIds': []}
         
-        return jsonify({'majorStage': response_major_stage,'status': 201})
+        return jsonify({'majorStage': response_major_stage}), 201
     except Exception as e:
-        return jsonify({'error': str(e)}, 500)
+        db.session.rollback()
+        return jsonify({
+            "error": "Internal server error"
+        }), 500
     
     
 @major_stage_bp.route('/update-major-stage/<int:journeyId>/<int:majorStageId>', methods=['POST'])
@@ -125,13 +131,16 @@ def update_major_stage(current_user, journeyId, majorStageId):
         journey_costs = db.session.execute(db.select(Costs).filter_by(journey_id=journeyId)).scalars().first()
         
     except:
-        return jsonify({'error': 'Unknown error'}, 400)
+        db.session.rollback()
+        return jsonify({
+            "error": "Internal server error"
+        }), 500
     
     
     response, isValid = MajorStageValidation.validate_major_stage_update(major_stage, existing_major_stages, existing_major_stages_costs, journey_costs, minor_stages, assigned_titles, old_major_stage)
     
     if not isValid:
-        return jsonify({'majorStageFormValues': response, 'status': 400})
+        return jsonify({'majorStageFormValues': response}), 400
     
     # Delete Minor Stages if Country is changed
     if response['country']['value'] != old_major_stage.country:
@@ -201,9 +210,12 @@ def update_major_stage(current_user, journeyId, majorStageId):
                 'link': transportation.link,
             }
         
-        return jsonify({'majorStage': response_major_stage,'status': 200})
+        return jsonify({'majorStage': response_major_stage}), 200
     except Exception as e:
-        return jsonify({'error': str(e)}, 500)
+        db.session.rollback()
+        return jsonify({
+            "error": "Internal server error"
+        }), 500
     
     
 @major_stage_bp.route('/delete-major-stage/<int:majorStageId>', methods=['DELETE'])
@@ -232,7 +244,10 @@ def delete_major_stage(current_user, majorStageId):
         
         return jsonify({'status': 200})
     except Exception as e:
-        return jsonify({'error': str(e)}, 500)
+        db.session.rollback()
+        return jsonify({
+            "error": "Internal server error"
+        }), 500
     
     
 @major_stage_bp.route('/swap-major-stages', methods=['POST'])
@@ -271,4 +286,4 @@ def swap_major_stages(current_user):
 
     db.session.commit()
 
-    return jsonify({'status': 200}), 200
+    return jsonify({'status': 200})

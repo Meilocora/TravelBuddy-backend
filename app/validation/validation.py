@@ -49,8 +49,8 @@ class Validation:
         
       if datetime.strptime(value, '%d.%m.%Y %H:%M') < datetime.strptime(min_date_time, '%d.%m.%Y %H:%M'):
         self.error_list.append("Can't be earlier than now")
-    finally:
-      return self.__return_feedback()
+    
+    return self.__return_feedback()
     
   
   def validate_date(self, value: str, min_date: str = None) -> bool | None:
@@ -65,8 +65,7 @@ class Validation:
         
       if datetime.strptime(value, '%d.%m.%Y') < datetime.strptime(min_date, '%d.%m.%Y'):
         self.error_list.append("Can't be earlier than now")
-    finally:
-      return self.__return_feedback()
+    return self.__return_feedback()
   
   
   def compare_date_times(self, start_date_time: str, end_date_time: str) -> bool | str:      
@@ -184,8 +183,8 @@ class Validation:
   
   def validate_coordinates(self, latitude:str, longitude:str):
     try:
-        lat = float(latitude['value'])
-        lng = float(longitude['value'])
+        float(latitude['value'])
+        float(longitude['value'])
     except (TypeError, ValueError, KeyError):
         self.error_list.append('No location picked')
         

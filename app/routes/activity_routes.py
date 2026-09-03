@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, current_app, jsonify, request
 
 from app.models import Activity, Costs, Journey, MajorStage, MinorStage
 from app.routes.resource_access import (
@@ -31,12 +31,12 @@ def create_activity(current_user, minorStageId):
         journey_costs = db.session.execute(db.select(Costs).filter_by(journey_id=journey.id)).scalars().first()
          
     except:
-        return jsonify({'error': 'Unknown error'}, 400) 
+        return jsonify({'error': 'Unknown error'}), 400 
     
     response, isValid = ActivityValidation.validate_activity(activity)
     
     if not isValid:
-        return jsonify({'activityFormValues': response, 'status': 400})
+        return jsonify({'activityFormValues': response}), 400
     
     try:
         # Create a new activity
@@ -67,9 +67,16 @@ def create_activity(current_user, minorStageId):
                                 'link': new_activity.link,
                                 'booked': new_activity.booked}
         
-        return jsonify({'activity': response_activity, 'backendJourneyId': journey.id, 'status': 201})
-    except Exception as e:
-        return jsonify({'error': str(e)}, 500)
+        return jsonify({'activity': response_activity, 'backendJourneyId': journey.id}), 201
+    except Exception:
+        db.session.rollback()
+        current_app.logger.exception(
+            "Failed to update activity"
+        )
+
+        return jsonify({
+            "error": "Internal server error"
+        }), 500
     
     
 @activity_bp.route('/update-activity/<int:minorStageId>/<int:activityId>', methods=['POST'])
@@ -91,12 +98,12 @@ def update_activity(current_user, minorStageId, activityId):
         journey_costs = db.session.execute(db.select(Costs).filter_by(journey_id=journey.id)).scalars().first()
          
     except:
-        return jsonify({'error': 'Unknown error'}, 400) 
+        return jsonify({'error': 'Unknown error'}), 400 
     
     response, isValid = ActivityValidation.validate_activity(new_activity)
     
     if not isValid:
-        return jsonify({'activityFormValues': response, 'status': 400})
+        return jsonify({'activityFormValues': response}), 400
     
     try:
         # Update old activity
@@ -124,9 +131,16 @@ def update_activity(current_user, minorStageId, activityId):
                                     'link': new_activity['link']['value'],
                                     'booked': new_activity['booked']['value']}
         
-        return jsonify({'activity': response_activity, 'backendJourneyId': journey.id, 'status': 200})
-    except Exception as e:
-        return jsonify({'error': str(e)}, 500)
+        return jsonify({'activity': response_activity, 'backendJourneyId': journey.id}), 200
+    except Exception:
+        db.session.rollback()
+        current_app.logger.exception(
+            "Failed to update activity"
+        )
+
+        return jsonify({
+            "error": "Internal server error"
+        }), 500
 
     
 
@@ -152,6 +166,13 @@ def delete_activity(current_user, activityId):
         
         calculate_journey_costs(journey_costs)
         
-        return jsonify({'status': 200, 'backendJourneyId': journey.id})
-    except Exception as e:
-        return jsonify({'error': str(e)}, 500)
+        return jsonify({'backendJourneyId': journey.id}), 200
+    except Exception:
+        db.session.rollback()
+        current_app.logger.exception(
+            "Failed to delete activity"
+        )
+
+        return jsonify({
+            "error": "Internal server error"
+        }), 500

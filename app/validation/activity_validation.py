@@ -70,7 +70,7 @@ class ActivityValidation(Validation):
                 activity['link']['isValid'] = False
             
             
-        for key, value in activity.items():
+        for key, value in activity.values():
             if value.get('errors'):
                 errors = True
                 break

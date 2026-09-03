@@ -23,9 +23,9 @@ def get_stages_data(current_user):
     journeys_list = fetch_journeys(current_user=current_user)
         
     if not isinstance(journeys_list, Exception):   
-        return jsonify({'journeys': journeys_list, 'status': 200})
+        return jsonify({'journeys': journeys_list}), 200
     else:
-        return jsonify({'error': str(journeys_list)}, 500)
+        return jsonify({'error': str(journeys_list)}), 500
         
     
 @journey_bp.route('/create-journey', methods=['POST'])
@@ -38,12 +38,12 @@ def create_journey(current_user):
         assigned_titles = get_users_stages_titles(current_user)
          
     except:
-        return jsonify({'error': 'Unknown error'}, 400)
+        return jsonify({'error': 'Unknown error'}), 400
 
     response, isValid = JourneyValidation.validate_journey(journey, existing_journeys, assigned_titles)
 
     if not isValid:
-        return jsonify({'journeyFormValues': response, 'status': 400})
+        return jsonify({'journeyFormValues': response}), 200
     
     
     try:
@@ -99,9 +99,12 @@ def create_journey(current_user):
                 'countries': new_journey.countries,
                 'majorStagesIds': []}
         
-        return jsonify({'journey': response_journey,'status': 201})
+        return jsonify({'journey': response_journey}),201
     except Exception as e:
-        return jsonify({'error': str(e)}, 500)
+        db.session.rollback()
+        return jsonify({
+            "error": "Internal server error"
+        }), 500
     
     
 @journey_bp.route('/update-journey/<int:journeyId>', methods=['POST'])
@@ -118,13 +121,16 @@ def update_journey(current_user, journeyId):
         if old_journey is None:
             return jsonify({'error': 'Journey not found'}), 404
         
-    except:
-        return jsonify({'error': 'Unknown error'}, 400)
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            "error": "Internal server error"
+        }), 500
     
     response, isValid = JourneyValidation.validate_journey_update(journey, existing_journeys, major_stages, assigned_titles, old_journey)
         
     if not isValid:
-        return jsonify({'journeyFormValues': response, 'status': 400})
+        return jsonify({'journeyFormValues': response}), 200
 
     money_exceeded = float(response['budget']['value']) < float(response['spent_money']['value'])
 
@@ -199,9 +205,12 @@ def update_journey(current_user, journeyId):
         if journey_spendings:
             response_journey['costs']['spendings'] = [{'id': spending.id, 'name': spending.name, 'amount': spending.amount, 'date': formatDateToString(spending.date), 'category': spending.category} for spending in journey_spendings]
         
-        return jsonify({'journey': response_journey,'status': 200})
+        return jsonify({'journey': response_journey}), 200
     except Exception as e:
-        return jsonify({'error': str(e)}, 500)
+        db.session.rollback()
+        return jsonify({
+            "error": "Internal server error"
+        }), 500
         
     
     
@@ -229,5 +238,8 @@ def delete_journey(current_user, journeyId):
         db.session.commit()
         return jsonify({'status': 200})
     except Exception as e:
-        return jsonify({'error': str(e)}, 500)
+        db.session.rollback()
+        return jsonify({
+            "error": "Internal server error"
+        }), 500
         

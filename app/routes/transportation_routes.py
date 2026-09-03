@@ -33,12 +33,12 @@ def create_major_stage_transportation(current_user, majorStageId):
         journey_costs = db.session.execute(db.select(Costs).filter_by(journey_id=journey.id)).scalars().first()
          
     except:
-        return jsonify({'error': 'Unknown error'}, 400) 
+        return jsonify({'error': 'Internal server error'}), 500
     
     response, isValid = TransportationValidation.validate_transportation(transportation)
     
     if not isValid:
-        return jsonify({'transportationFormValues': response, 'status': 400})
+        return jsonify({'transportationFormValues': response}), 400
     
     try:     
         # Remove line breaks from the name
@@ -78,9 +78,10 @@ def create_major_stage_transportation(current_user, majorStageId):
                                     'transportation_costs': new_transportation.transportation_costs,
                                     'link': new_transportation.link}
         
-        return jsonify({'transportation': response_transportation, 'status': 201})
+        return jsonify({'transportation': response_transportation}), 201
     except Exception as e:
-        return jsonify({'error': str(e)}, 500)
+        db.session.rollback()
+        return jsonify({'error': 'Internal server error'}), 500
     
 @transportation_bp.route('/create-minor-stage-transportation/<int:minorStageId>', methods=['POST'])
 @token_required 
@@ -99,12 +100,13 @@ def create_minor_stage_transportation(current_user, minorStageId):
         journey_costs = db.session.execute(db.select(Costs).filter_by(journey_id=journey.id)).scalars().first()
          
     except:
-        return jsonify({'error': 'Unknown error'}, 400) 
+        db.session.rollback()
+        return jsonify({'error': 'Internal server error'}), 500
     
     response, isValid = TransportationValidation.validate_transportation(transportation)
     
     if not isValid:
-        return jsonify({'transportationFormValues': response, 'status': 400})
+        return jsonify({'transportationFormValues': response}), 400
     
     try:
          # Remove line breaks from the name
@@ -144,9 +146,10 @@ def create_minor_stage_transportation(current_user, minorStageId):
                                     'transportation_costs': new_transportation.transportation_costs,
                                     'link': new_transportation.link}
         
-        return jsonify({'transportation': response_transportation, 'backendMajorStageId': major_stage.id, 'status': 201})
+        return jsonify({'transportation': response_transportation, 'backendMajorStageId': major_stage.id}), 201
     except Exception as e:
-        return jsonify({'error': str(e)}, 500)
+        db.session.rollback()
+        return jsonify({'error': 'Internal server error'}), 500
     
     
 @transportation_bp.route('/update-major-stage-transportation/<int:majorStageId>/<int:transportationId>', methods=['POST'])
@@ -170,12 +173,13 @@ def update_major_stage_transportation(current_user, majorStageId, transportation
         journey_costs = db.session.execute(db.select(Costs).filter_by(journey_id=journey.id)).scalars().first()
          
     except:
-        return jsonify({'error': 'Unknown error'}, 400) 
+        db.session.rollback()
+        return jsonify({'error': 'Internal server error'}), 500
     
     response, isValid = TransportationValidation.validate_transportation(new_transportation)
     
     if not isValid:
-        return jsonify({'transportationFormValues': response, 'status': 400})
+        return jsonify({'transportationFormValues': response}), 400
     
     try:
          # Remove line breaks from the name
@@ -211,9 +215,10 @@ def update_major_stage_transportation(current_user, majorStageId, transportation
                                     'transportation_costs': new_transportation['transportation_costs']['value'],
                                     'link': new_transportation['link']['value']}
 
-        return jsonify({'transportation': response_transportation, 'status': 201})
+        return jsonify({'transportation': response_transportation}), 201
     except Exception as e:
-        return jsonify({'error': str(e)}, 500)
+        db.session.rollback()
+        return jsonify({'error': 'Internal server error'}), 500
     
 @transportation_bp.route('/update-minor-stage-transportation/<int:minorStageId>/<int:transportationId>', methods=['POST'])
 @token_required 
@@ -238,12 +243,13 @@ def update_minor_stage_transportation(current_user, minorStageId, transportation
         journey_costs = db.session.execute(db.select(Costs).filter_by(journey_id=journey.id)).scalars().first()
          
     except:
-        return jsonify({'error': 'Unknown error'}, 400) 
+        db.session.rollback()
+        return jsonify({'error': 'Internal server error'}), 500 
     
     response, isValid = TransportationValidation.validate_transportation(new_transportation)
     
     if not isValid:
-        return jsonify({'transportationFormValues': response, 'status': 400})
+        return jsonify({'transportationFormValues': response}), 400
     
     try:
         # Remove line breaks from the name
@@ -279,9 +285,10 @@ def update_minor_stage_transportation(current_user, minorStageId, transportation
                                     'transportation_costs': new_transportation['transportation_costs']['value'],
                                     'link': new_transportation['link']['value']}
 
-        return jsonify({'transportation': response_transportation, 'backendMajorStageId': major_stage.id,  'status': 201})
+        return jsonify({'transportation': response_transportation, 'backendMajorStageId': major_stage.id}), 201
     except Exception as e:
-        return jsonify({'error': str(e)}, 500)
+        db.session.rollback()
+        return jsonify({'error': 'Internal server error'}), 500
     
     
 @transportation_bp.route('/delete-major-stage-transportation/<int:majorStageId>', methods=['DELETE'])
@@ -303,9 +310,10 @@ def delete_major_stage_transportation(current_user, majorStageId):
         
         calculate_journey_costs(journey_costs)
         
-        return jsonify({'status': 200})
+        return jsonify({'status': 200}), 200
     except Exception as e:
-        return jsonify({'error': str(e)}, 500)
+        db.session.rollback()
+        return jsonify({'error': 'Internal server error'}), 500
     
 
 @transportation_bp.route('/delete-minor-stage-transportation/<int:minorStageId>', methods=['DELETE'])
@@ -327,6 +335,7 @@ def delete_minor_stage_transportation(current_user, minorStageId):
         
         calculate_journey_costs(journey_costs)
         
-        return jsonify({'status': 200, 'backendMajorStageId': major_stage.id})
+        return jsonify({ 'backendMajorStageId': major_stage.id}), 200
     except Exception as e:
-        return jsonify({'error': str(e)}, 500)
+        db.session.rollback()
+        return jsonify({'error': 'Internal server error'}), 500

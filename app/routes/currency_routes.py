@@ -14,11 +14,11 @@ def create_currency(current_user):
     try:
         currency = request.get_json()
     except:
-        return jsonify({'error': 'Unknown error'}, 400) 
+        return jsonify({'error': 'Unknown error'}), 400 
         
     response, isValid = CurrencyValidation.validate_currency(currency=currency)
     if not isValid:
-        return jsonify({'currencyFormValues': response, 'status': 400})
+        return jsonify({'currencyFormValues': response}), 200
     
     try:
         # Create a new currency
@@ -35,7 +35,10 @@ def create_currency(current_user):
         
         return jsonify({'status': 201})
     except Exception as e:
-        return jsonify({'error': str(e)}, 500)
+        db.session.rollback()
+        return jsonify({
+            "error": "Internal server error"
+        }), 500
     
     
 @currency_bp.route('/update-currency/<int:currencyId>', methods=['POST'])
@@ -51,12 +54,12 @@ def update_currency(current_user, currencyId):
         
         currency = request.get_json()
     except:
-        return jsonify({'error': 'Unknown error'}, 400)
+        return jsonify({'error': 'Unknown error'}), 400
         
     response, isValid = CurrencyValidation.validate_currency(currency=currency)
     
     if not isValid:
-        return jsonify({'currencyFormValues': response, 'status': 400})
+        return jsonify({'currencyFormValues': response}), 200
         
     try:        
         # Update the currency
@@ -71,7 +74,10 @@ def update_currency(current_user, currencyId):
         
         return jsonify({'status': 200})
     except Exception as e:
-        return jsonify({'error': str(e)}, 500)
+        db.session.rollback()
+        return jsonify({
+            "error": "Internal server error"
+        }), 500
         
         
 @currency_bp.route('/delete-currency/<int:currencyId>', methods=['DELETE'])
@@ -90,6 +96,9 @@ def delete_currency(current_user, currencyId):
         
         return jsonify({'status': 200})
     except Exception as e:
-        return jsonify({'error': str(e)}, 500)
+        db.session.rollback()
+        return jsonify({
+            "error": "Internal server error"
+        }), 500
     
   
