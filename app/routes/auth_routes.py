@@ -55,15 +55,19 @@ def login():
             return jsonify({'token': token, 'refreshToken': refresh_token}), 200
         else:
             return jsonify({'error': 'Invalid credentials'}), 401
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+    except Exception:
+        db.session.rollback()
+        
+        return jsonify({
+            "error": "Internal server error"
+        }), 500
 
 
 @auth_bp.route('/create-user', methods=['POST'])
 def register():
     try:
         signUpData = request.get_json()
-    except:
+    except Exception:
         return jsonify({'error': 'Unknown error'}), 400
         
     response, isValid = AuthValidation.validate_signUp(signUpData=signUpData)
@@ -102,7 +106,7 @@ def register():
         refresh_token = create_refresh_token(new_user)
         
         return jsonify({'token': token, 'refreshToken': refresh_token}), 201
-    except Exception as e:
+    except Exception:
         return jsonify({'error': 'Internal server error'}), 500
   
 
@@ -134,7 +138,7 @@ def refresh_token():
         new_refresh_token = create_refresh_token(user)
 
         return jsonify({'newToken': new_token, 'newRefreshToken': new_refresh_token}), 200
-    except Exception as e:
+    except Exception:
         return jsonify({'error': 'Internal server error'}), 500
  
  
@@ -155,7 +159,7 @@ def change_username(current_user):
     try:
         nameFormValues = request.get_json()
         currentUserData = db.get_or_404(User, current_user)
-    except:
+    except Exception:
         return jsonify({'error': 'Unknown error'}), 400
         
     response, isValid = AuthValidation.validate_change_username(nameChangeData=nameFormValues, currentUserData=currentUserData)
@@ -169,7 +173,7 @@ def change_username(current_user):
             username=nameFormValues['newUsername']['value'],
         ))
         db.session.commit()
-    except Exception as e:
+    except Exception:
         return jsonify({'error': 'Internal server error'}), 500
     else:
         return jsonify({'newUsername': nameFormValues['newUsername']['value']}), 200
@@ -182,7 +186,7 @@ def change_password(current_user):
         passwordFormValues = request.get_json()      
         currentUserData = User.query.filter_by(id=current_user).first()
         
-    except:
+    except Exception:
         return jsonify({'error': 'Unknown error'}), 400
 
     response, isValid = AuthValidation.validate_change_password(passwordChangeData=passwordFormValues, currentUserData=currentUserData)
@@ -199,7 +203,7 @@ def change_password(current_user):
             password=hashed_password,
         ))
         db.session.commit()
-    except Exception as e:
+    except Exception:
         return jsonify({'error': 'Internal server error'}), 500
     else:
         return jsonify({'status': 200})

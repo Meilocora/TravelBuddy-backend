@@ -13,7 +13,7 @@ currency_bp = Blueprint('currency', __name__)
 def create_currency(current_user):
     try:
         currency = request.get_json()
-    except:
+    except Exception:
         return jsonify({'error': 'Unknown error'}), 400 
         
     response, isValid = CurrencyValidation.validate_currency(currency=currency)
@@ -34,7 +34,7 @@ def create_currency(current_user):
         db.session.commit()
         
         return jsonify({'status': 201})
-    except Exception as e:
+    except Exception:
         db.session.rollback()
         return jsonify({
             "error": "Internal server error"
@@ -53,7 +53,7 @@ def update_currency(current_user, currencyId):
             return jsonify({'error': 'Currency not found'}), 404
         
         currency = request.get_json()
-    except:
+    except Exception:
         return jsonify({'error': 'Unknown error'}), 400
         
     response, isValid = CurrencyValidation.validate_currency(currency=currency)
@@ -73,7 +73,7 @@ def update_currency(current_user, currencyId):
         db.session.commit()        
         
         return jsonify({'status': 200})
-    except Exception as e:
+    except Exception:
         db.session.rollback()
         return jsonify({
             "error": "Internal server error"
@@ -95,7 +95,7 @@ def delete_currency(current_user, currencyId):
         db.session.commit()
         
         return jsonify({'status': 200})
-    except Exception as e:
+    except Exception:
         db.session.rollback()
         return jsonify({
             "error": "Internal server error"

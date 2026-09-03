@@ -54,7 +54,7 @@ def create_minor_stage(current_user, majorStageId):
         journey_id = major_stage.journey_id
         journey_costs = db.session.execute(db.select(Costs).filter_by(journey_id=journey_id)).scalars().first()
         
-    except:
+    except Exception:
         db.session.rollback()
         return jsonify({'error': 'Internal server error'}), 500 
     
@@ -129,7 +129,7 @@ def create_minor_stage(current_user, majorStageId):
         }
         
         return jsonify({'minorStage': response_minor_stage}), 201
-    except Exception as e:
+    except Exception:
         db.session.rollback()
         return jsonify({'error': 'Internal server error'}), 500
     
@@ -161,7 +161,7 @@ def update_minor_stage(current_user, majorStageId, minorStageId):
         journey_id = db.session.execute(db.select(MajorStage).filter_by(id=majorStageId)).scalars().first().journey_id
         journey_costs = db.session.execute(db.select(Costs).filter_by(journey_id=journey_id)).scalars().first()
         
-    except:
+    except Exception:
         db.session.rollback()
         return jsonify({'error': 'Internal server error'}), 500 
     
@@ -262,7 +262,7 @@ def update_minor_stage(current_user, majorStageId, minorStageId):
                 response_minor_stage['placesToVisit'] = [{'countryId': place_to_visit.custom_country_id ,'id': place_to_visit.id, 'name': place_to_visit.name, 'description': place_to_visit.description, 'visited': place_to_visit.visited, 'favorite': place_to_visit.favorite, 'latitude': place_to_visit.latitude, 'longitude': place_to_visit.longitude, 'link': place_to_visit.link} for place_to_visit in places_to_visit]
 
         return jsonify({'minorStage': response_minor_stage}), 200
-    except Exception as e:
+    except Exception:
         db.session.rollback()
         return jsonify({'error': 'Internal server error'}), 500
     
@@ -294,7 +294,7 @@ def delete_minor_stage(current_user, minorStageId):
         calculate_journey_costs(journey_costs)
         
         return jsonify({'status': 200})
-    except Exception as e:
+    except Exception:
         db.session.rollback()
         return jsonify({'error': 'Internal server error'}), 500
 
@@ -309,6 +309,6 @@ def swap_minor_stages(current_user):
         db.session.commit()
         
         return jsonify({'status': 200})
-    except Exception as e:
+    except Exception:
         db.session.rollback()
         return jsonify({'error': 'Internal server error'}), 500

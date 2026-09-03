@@ -37,7 +37,7 @@ def create_journey(current_user):
         existing_journeys = result.scalars().all()
         assigned_titles = get_users_stages_titles(current_user)
          
-    except:
+    except Exception:
         return jsonify({'error': 'Unknown error'}), 400
 
     response, isValid = JourneyValidation.validate_journey(journey, existing_journeys, assigned_titles)
@@ -100,7 +100,7 @@ def create_journey(current_user):
                 'majorStagesIds': []}
         
         return jsonify({'journey': response_journey}),201
-    except Exception as e:
+    except Exception:
         db.session.rollback()
         return jsonify({
             "error": "Internal server error"
@@ -121,7 +121,7 @@ def update_journey(current_user, journeyId):
         if old_journey is None:
             return jsonify({'error': 'Journey not found'}), 404
         
-    except Exception as e:
+    except Exception:
         db.session.rollback()
         return jsonify({
             "error": "Internal server error"
@@ -206,7 +206,7 @@ def update_journey(current_user, journeyId):
             response_journey['costs']['spendings'] = [{'id': spending.id, 'name': spending.name, 'amount': spending.amount, 'date': formatDateToString(spending.date), 'category': spending.category} for spending in journey_spendings]
         
         return jsonify({'journey': response_journey}), 200
-    except Exception as e:
+    except Exception:
         db.session.rollback()
         return jsonify({
             "error": "Internal server error"
@@ -237,7 +237,7 @@ def delete_journey(current_user, journeyId):
         db.session.delete(journey)
         db.session.commit()
         return jsonify({'status': 200})
-    except Exception as e:
+    except Exception:
         db.session.rollback()
         return jsonify({
             "error": "Internal server error"

@@ -67,8 +67,8 @@ def fetch_journeys(current_user):
             journeys_list.append(journey_data)
         
         return journeys_list
-    except Exception as e:
-        return e
+    except Exception:
+        return None
 
 
 def fetch_custom_countries(current_user, journeyId):
@@ -113,8 +113,8 @@ def fetch_custom_countries(current_user, journeyId):
                                               })
         
         return response_custom_countries
-    except Exception as e:
-        return e
+    except Exception:
+        return None
 
 
 def fetch_major_stages(current_user, journeyId):
@@ -193,8 +193,8 @@ def fetch_major_stages(current_user, journeyId):
             major_stages_list.append(major_stage_data)
         
         return major_stages_list
-    except Exception as e:
-        return e
+    except Exception:
+        return None
     
 def fetch_custom_country(current_user, countryName):
     try:        
@@ -223,8 +223,8 @@ def fetch_custom_country(current_user, countryName):
                                             }
         
         return response_custom_country
-    except Exception as e:
-        return e
+    except Exception:
+        return None
       
       
 def fetch_minor_stages(majorStageId):
@@ -300,8 +300,8 @@ def fetch_minor_stages(majorStageId):
             minor_stages_list.append(minor_stage_data)
         
         return minor_stages_list
-    except Exception as e:
-        return e
+    except Exception:
+        return None
 
 
 def adjust_stages_orders(other_stages, new_order, old_order=None):    
@@ -345,5 +345,5 @@ def fetch_media(current_user):
             media_list.append(medium_data)
         
         return media_list
-    except Exception as e:
-        return e
+    except Exception:
+        return None

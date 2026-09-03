@@ -32,7 +32,7 @@ def get_places(current_user):
                 'minorStageIds': [stage.id for stage in place.minor_stages]
             })    
         return jsonify({'places': places_list}), 200
-    except Exception as e:
+    except Exception:
         db.session.rollback()
         return jsonify({
             "error": "Internal server error"
@@ -74,7 +74,7 @@ def get_places_by_country(current_user, minorStageId, countryName):
             })    
                     
         return jsonify({'places': places_list, 'countryId': country.id}), 200
-    except Exception as e:
+    except Exception:
         db.session.rollback()
         return jsonify({'error': 'Internal server error'}), 500
     
@@ -84,7 +84,7 @@ def get_places_by_country(current_user, minorStageId, countryName):
 def create_place(current_user):
     try:
         place = request.get_json()
-    except:
+    except Exception:
         return jsonify({'error': 'Unknown error'}), 400 
         
     response, isValid = PlaceValidation.validate_place(place=place)
@@ -125,7 +125,7 @@ def create_place(current_user):
                 }
         
         return jsonify({'place': response_place}), 201
-    except Exception as e:
+    except Exception:
         db.session.rollback()
         return jsonify({'error': 'Internal server error'}), 500
     
@@ -143,7 +143,7 @@ def update_place(current_user, placeId):
             return jsonify({'error': 'Place not found'}), 404
         
         place = request.get_json()
-    except:
+    except Exception:
         return jsonify({'error': 'Unknown error'}), 400
     
     response, isValid = PlaceValidation.validate_place(place=place)
@@ -181,7 +181,7 @@ def update_place(current_user, placeId):
         
         
         return jsonify({'place': response_place}), 200
-    except Exception as e:
+    except Exception:
         db.session.rollback()
         return jsonify({'error': 'Internal server error'}), 500
         
@@ -205,7 +205,7 @@ def toggle_favorite_place(current_user, placeId):
         db.session.commit()
 
         return jsonify({'status': 200}), 200
-    except Exception as e:
+    except Exception:
         db.session.rollback()
         return jsonify({'error': 'Internal server error'}), 500
     
@@ -250,7 +250,7 @@ def toggle_visited_place(current_user, placeId):
         
         
         return jsonify({'status': 200})
-    except Exception as e:
+    except Exception:
         db.session.rollback()
         return jsonify({'error': 'Internal server error'}), 500
 
@@ -286,7 +286,7 @@ def delete_place(current_user, placeId):
         
         db.session.commit()
         return jsonify({'status': 200})
-    except Exception as e:
+    except Exception:
         db.session.rollback()
         return jsonify({'error': 'Internal server error'}), 500
     
@@ -311,7 +311,7 @@ def add_minor_stage_to_place(current_user, placeId, minorStageId):
             db.session.commit()
 
         return jsonify({'status': 200})
-    except Exception as e:
+    except Exception:
         db.session.rollback()
         return jsonify({'error': 'Internal server error'}), 500
     
@@ -334,6 +334,6 @@ def remove_minor_stage_from_place(current_user, placeId, minorStageId):
             db.session.commit()
 
         return jsonify({'status': 200})
-    except Exception as e:
+    except Exception:
         db.session.rollback()
         return jsonify({'error': 'Internal server error'}), 500

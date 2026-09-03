@@ -66,7 +66,7 @@ def get_custom_countries(current_user):
                                               })
         
         return jsonify({'customCountries': response_custom_countries}), 200
-    except Exception as e:
+    except Exception:
         db.session.rollback()
         return jsonify({
             "error": "Internal server error"
@@ -118,7 +118,7 @@ def create_custom_country(current_user):
                                 }
         
         return jsonify({'customCountry': response_country}), 201
-    except Exception as e:
+    except Exception:
         db.session.rollback()
         return jsonify({
             "error": "Internal server error"
@@ -139,7 +139,7 @@ def update_country(current_user, customCountryId):
             return jsonify({'error': 'Custom country not found'}), 404
         
         country = request.get_json()
-    except:
+    except Exception:
         return jsonify({'error': 'Unknown error'}), 400
     
     # Convert list inputs to comma-separated strings
@@ -182,7 +182,7 @@ def update_country(current_user, customCountryId):
                             }
         
         return jsonify({'customCountry': response_country}), 200
-    except Exception as e:
+    except Exception:
         db.session.rollback()
         return jsonify({
             "error": "Internal server error"
@@ -221,7 +221,7 @@ def delete_custom_country(current_user, customCountryId):
         db.session.delete(custom_country)
         db.session.commit()
         return jsonify({'countryName': countryName}), 200
-    except Exception as e:
+    except Exception:
         db.session.rollback()
         return jsonify({
             "error": "Internal server error"

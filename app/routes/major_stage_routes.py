@@ -41,7 +41,7 @@ def create_major_stage(current_user, journeyId):
         
         journey_costs = db.session.execute(db.select(Costs).filter_by(journey_id=journeyId)).scalars().first()
          
-    except Exception as e:
+    except Exception:
         db.session.rollback()
         return jsonify({
             "error": "Internal server error"
@@ -96,7 +96,7 @@ def create_major_stage(current_user, journeyId):
                                 'minorStagesIds': []}
         
         return jsonify({'majorStage': response_major_stage}), 201
-    except Exception as e:
+    except Exception:
         db.session.rollback()
         return jsonify({
             "error": "Internal server error"
@@ -130,7 +130,7 @@ def update_major_stage(current_user, journeyId, majorStageId):
     
         journey_costs = db.session.execute(db.select(Costs).filter_by(journey_id=journeyId)).scalars().first()
         
-    except:
+    except Exception:
         db.session.rollback()
         return jsonify({
             "error": "Internal server error"
@@ -211,7 +211,7 @@ def update_major_stage(current_user, journeyId, majorStageId):
             }
         
         return jsonify({'majorStage': response_major_stage}), 200
-    except Exception as e:
+    except Exception:
         db.session.rollback()
         return jsonify({
             "error": "Internal server error"
@@ -243,7 +243,7 @@ def delete_major_stage(current_user, majorStageId):
         calculate_journey_costs(journey_costs)
         
         return jsonify({'status': 200})
-    except Exception as e:
+    except Exception:
         db.session.rollback()
         return jsonify({
             "error": "Internal server error"

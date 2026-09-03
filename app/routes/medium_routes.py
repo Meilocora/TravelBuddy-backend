@@ -25,7 +25,7 @@ def get_media(current_user):
 def add_media(current_user):
     try:
         mediumData = request.get_json()
-    except:
+    except Exception:
         return jsonify({'error': 'Internal server error'}), 400
     
     try:
@@ -49,7 +49,7 @@ def add_media(current_user):
         db.session.commit()
 
         return jsonify({'status': 201})
-    except Exception as e:
+    except Exception:
         db.session.rollback()
         return jsonify({'error': 'Internal server error'}), 500
     
@@ -68,7 +68,7 @@ def update_medium(current_user, mediumId):
         if old_medium is None:
             return jsonify({'error': 'Medium not found'}), 404
         
-    except:
+    except Exception:
         db.session.rollback()
         return jsonify({'error': 'Internal server error'}), 500
 
@@ -90,7 +90,7 @@ def update_medium(current_user, mediumId):
         db.session.commit()
                 
         return jsonify({'status': 200})
-    except Exception as e:
+    except Exception:
         db.session.rollback()
         return jsonify({'error': 'Internal server error'}), 500
     
@@ -110,7 +110,7 @@ def delete_medium(current_user, mediumId):
         db.session.delete(medium)
         db.session.commit()
         return jsonify({'status': 200})
-    except Exception as e:
+    except Exception:
         db.session.rollback()
         return jsonify({'error': 'Internal server error'}), 500
     
@@ -134,7 +134,7 @@ def delete_medium(current_user, mediumId):
 #         db.session.commit()
                 
 #         return jsonify({'status': 200}), 200
-#     except Exception as e:
+#     except Exception:
 #         db.session.rollback()
 #         return jsonify({'error': str(e)}), 500
 
@@ -180,6 +180,6 @@ def delete_media(current_user):
         db.session.commit()
 
         return jsonify({'status': 200})
-    except Exception as e:
+    except Exception:
         db.session.rollback()
         return jsonify({'error': 'Internal server error'}), 500

@@ -30,7 +30,7 @@ def create_activity(current_user, minorStageId):
         journey = db.get_or_404(Journey, major_stage.journey_id)
         journey_costs = db.session.execute(db.select(Costs).filter_by(journey_id=journey.id)).scalars().first()
          
-    except:
+    except Exception:
         return jsonify({'error': 'Unknown error'}), 400 
     
     response, isValid = ActivityValidation.validate_activity(activity)
@@ -97,7 +97,7 @@ def update_activity(current_user, minorStageId, activityId):
         journey = db.get_or_404(Journey, major_stage.journey_id)
         journey_costs = db.session.execute(db.select(Costs).filter_by(journey_id=journey.id)).scalars().first()
          
-    except:
+    except Exception:
         return jsonify({'error': 'Unknown error'}), 400 
     
     response, isValid = ActivityValidation.validate_activity(new_activity)

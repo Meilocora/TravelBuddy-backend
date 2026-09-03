@@ -32,7 +32,7 @@ def create_major_stage_transportation(current_user, majorStageId):
         journey = db.get_or_404(Journey, major_stage.journey_id)
         journey_costs = db.session.execute(db.select(Costs).filter_by(journey_id=journey.id)).scalars().first()
          
-    except:
+    except Exception:
         return jsonify({'error': 'Internal server error'}), 500
     
     response, isValid = TransportationValidation.validate_transportation(transportation)
@@ -79,7 +79,7 @@ def create_major_stage_transportation(current_user, majorStageId):
                                     'link': new_transportation.link}
         
         return jsonify({'transportation': response_transportation}), 201
-    except Exception as e:
+    except Exception:
         db.session.rollback()
         return jsonify({'error': 'Internal server error'}), 500
     
@@ -99,7 +99,7 @@ def create_minor_stage_transportation(current_user, minorStageId):
         journey = db.get_or_404(Journey, major_stage.journey_id)
         journey_costs = db.session.execute(db.select(Costs).filter_by(journey_id=journey.id)).scalars().first()
          
-    except:
+    except Exception:
         db.session.rollback()
         return jsonify({'error': 'Internal server error'}), 500
     
@@ -147,7 +147,7 @@ def create_minor_stage_transportation(current_user, minorStageId):
                                     'link': new_transportation.link}
         
         return jsonify({'transportation': response_transportation, 'backendMajorStageId': major_stage.id}), 201
-    except Exception as e:
+    except Exception:
         db.session.rollback()
         return jsonify({'error': 'Internal server error'}), 500
     
@@ -172,7 +172,7 @@ def update_major_stage_transportation(current_user, majorStageId, transportation
         journey = db.get_or_404(Journey, major_stage.journey_id)
         journey_costs = db.session.execute(db.select(Costs).filter_by(journey_id=journey.id)).scalars().first()
          
-    except:
+    except Exception:
         db.session.rollback()
         return jsonify({'error': 'Internal server error'}), 500
     
@@ -216,7 +216,7 @@ def update_major_stage_transportation(current_user, majorStageId, transportation
                                     'link': new_transportation['link']['value']}
 
         return jsonify({'transportation': response_transportation}), 201
-    except Exception as e:
+    except Exception:
         db.session.rollback()
         return jsonify({'error': 'Internal server error'}), 500
     
@@ -242,7 +242,7 @@ def update_minor_stage_transportation(current_user, minorStageId, transportation
         journey = db.get_or_404(Journey, major_stage.journey_id)
         journey_costs = db.session.execute(db.select(Costs).filter_by(journey_id=journey.id)).scalars().first()
          
-    except:
+    except Exception:
         db.session.rollback()
         return jsonify({'error': 'Internal server error'}), 500 
     
@@ -286,7 +286,7 @@ def update_minor_stage_transportation(current_user, minorStageId, transportation
                                     'link': new_transportation['link']['value']}
 
         return jsonify({'transportation': response_transportation, 'backendMajorStageId': major_stage.id}), 201
-    except Exception as e:
+    except Exception:
         db.session.rollback()
         return jsonify({'error': 'Internal server error'}), 500
     
@@ -311,7 +311,7 @@ def delete_major_stage_transportation(current_user, majorStageId):
         calculate_journey_costs(journey_costs)
         
         return jsonify({'status': 200}), 200
-    except Exception as e:
+    except Exception:
         db.session.rollback()
         return jsonify({'error': 'Internal server error'}), 500
     
@@ -336,6 +336,6 @@ def delete_minor_stage_transportation(current_user, minorStageId):
         calculate_journey_costs(journey_costs)
         
         return jsonify({ 'backendMajorStageId': major_stage.id}), 200
-    except Exception as e:
+    except Exception:
         db.session.rollback()
         return jsonify({'error': 'Internal server error'}), 500

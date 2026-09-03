@@ -31,7 +31,7 @@ def create_spending(current_user, minorStageId):
         journey = db.get_or_404(Journey, major_stage.journey_id)
         journey_costs = db.session.execute(db.select(Costs).filter_by(journey_id=journey.id)).scalars().first()
          
-    except Exception as e:
+    except Exception:
         db.session.rollback()
         return jsonify({
             "error": "Internal server error"
@@ -64,7 +64,7 @@ def create_spending(current_user, minorStageId):
                                 'category': new_spending.category}
         
         return jsonify({'spending': response_spending, 'backendJourneyId': journey.id}), 201
-    except Exception as e:
+    except Exception:
         db.session.rollback()
         return jsonify({'error': 'Internal server error'}), 500
     
@@ -90,7 +90,7 @@ def update_spending(current_user, minorStageId, spendingId):
         journey = db.get_or_404(Journey, major_stage.journey_id)
         journey_costs = db.session.execute(db.select(Costs).filter_by(journey_id=journey.id)).scalars().first()
          
-    except:
+    except Exception:
         db.session.rollback()
         return jsonify({'error': 'Internal server error'}), 500
     
@@ -117,7 +117,7 @@ def update_spending(current_user, minorStageId, spendingId):
                                     'category': new_spending['category']['value']}
 
         return jsonify({'spending': response_spending, 'backendJourneyId': journey.id}), 200
-    except Exception as e:
+    except Exception:
         db.session.rollback()
         return jsonify({'error': 'Internal server error'}), 500
 
@@ -147,7 +147,7 @@ def delete_spending(current_user, spendingId):
         calculate_journey_costs(journey_costs)
         
         return jsonify({'backendJourneyId': journey.id}), 200
-    except Exception as e:
+    except Exception:
         db.session.rollback()
         return jsonify({'error': 'Internal server error'}), 500
     
