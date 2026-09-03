@@ -1,16 +1,29 @@
 from flask import Blueprint, jsonify, request
+
+from app.models import (
+    Accommodation,
+    Activity,
+    Costs,
+    MajorStage,
+    MinorStage,
+    Spendings,
+    Transportation,
+)
 from app.routes.db_util import adjust_stages_orders
-from db import db
-from app.routes.route_protection import token_required
-from app.routes.util import get_users_stages_titles, parseDate, formatDateToString, formatDateTimeToString
-from app.models import Costs, Spendings, MajorStage, MinorStage, Transportation, Accommodation, Activity, PlaceToVisit
-from app.validation.minor_stage_validation import MinorStageValidation
-from app.routes.util import calculate_journey_costs
 from app.routes.resource_access import (
     get_user_major_stage,
     get_user_minor_stage,
-    get_user_minor_stages_by_ids,
 )
+from app.routes.route_protection import token_required
+from app.routes.util import (
+    calculate_journey_costs,
+    formatDateTimeToString,
+    formatDateToString,
+    get_users_stages_titles,
+    parseDate,
+)
+from app.validation.minor_stage_validation import MinorStageValidation
+from db import db
 
 minor_stage_bp = Blueprint('minor_stage', __name__)
   

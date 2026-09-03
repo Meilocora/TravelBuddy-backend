@@ -1,7 +1,5 @@
-from datetime import datetime
-from db import db
 from app.validation.validation import Validation
-from app.routes.util import parseDate
+
 
 class JourneyValidation(Validation):
   def __init__(self):
@@ -15,11 +13,11 @@ class JourneyValidation(Validation):
         for key, value in journey.items():
             if key != 'description':
                 if value['value'] == "" or value['value'] == None:
-                    journey[key]['errors'].append(f'Input is required')
+                    value['errors'].append('Input is required')
                     journey[key]['isValid'] = False
             
         if len(journey['countries']['value']) == 0:
-              journey['countries']['errors'].append(f'At least one country is required')
+              journey['countries']['errors'].append('At least one country is required')
               journey['countries']['isValid'] = False    
               
         name_val = JourneyValidation().validate_string(journey['name']['value'], min_length=3, max_length=50)
@@ -67,7 +65,7 @@ class JourneyValidation(Validation):
             
             
         for key, value in journey.items():
-            if 'errors' in value and value['errors']:
+            if value.get('errors'):
                 errors = True
                 break
         
@@ -82,12 +80,12 @@ class JourneyValidation(Validation):
           for key, value in journey.items():
             if key != 'description':
                 if value['value'] == "" or value['value'] == None:
-                    journey[key]['errors'].append(f'Input is required')
+                    value['errors'].append('Input is required')
                     journey[key]['isValid'] = False
             
             
           if len(journey['countries']['value']) == 0:
-              journey['countries']['errors'].append(f'At least one country is required')
+              journey['countries']['errors'].append('At least one country is required')
               journey['countries']['isValid'] = False    
               
           name_val = JourneyValidation().validate_string(journey['name']['value'], min_length=3) 
@@ -147,7 +145,7 @@ class JourneyValidation(Validation):
                 
                 
           for key, value in journey.items():
-              if 'errors' in value and value['errors']:
+              if value.get('errors'):
                   errors = True
                   break
             

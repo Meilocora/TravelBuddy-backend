@@ -1,13 +1,15 @@
-import jwt
 import datetime
-from flask import Blueprint, request, jsonify
-from app.routes.route_protection import token_required
-from db import db
-from app.models import User
-from app.validation.auth_validation import AuthValidation
-import bcrypt
-from dotenv import load_dotenv
 import os
+
+import bcrypt
+import jwt
+from dotenv import load_dotenv
+from flask import Blueprint, jsonify, request
+
+from app.models import User
+from app.routes.route_protection import token_required
+from app.validation.auth_validation import AuthValidation
+from db import db
 
 # Load environment variables from .env file
 load_dotenv()

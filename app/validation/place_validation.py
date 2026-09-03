@@ -1,5 +1,6 @@
 from app.validation.validation import Validation
 
+
 class PlaceValidation(Validation):
   def __init__(self):
     super().__init__()
@@ -13,10 +14,10 @@ class PlaceValidation(Validation):
             if key != 'description' and key != 'link' and key != 'latitude' and key != 'longitude':
                 try:
                     if value['value'] == "" or value['value'] == None:
-                        place[key]['errors'].append(f'Input is required')
+                        value['errors'].append('Input is required')
                         place[key]['isValid'] = False
                 except KeyError:
-                    place['name']['errors'].append(f", Inputs is required")
+                    place['name']['errors'].append(", Inputs is required")
                     place['name']['isValid'] = False
                     errors = True
                     return place, not errors
@@ -25,7 +26,7 @@ class PlaceValidation(Validation):
             place['latitude']['value']
             place['longitude']['value']
         except KeyError:
-            place['name']['errors'].append(f", Select a location on the map")
+            place['name']['errors'].append(", Select a location on the map")
             place['name']['isValid'] = False
             place['latitude']['isValid'] = False
         else: 
@@ -45,7 +46,7 @@ class PlaceValidation(Validation):
             place['link']['isValid'] = False
             
         for key, value in place.items():
-            if 'errors' in value and value['errors']:
+            if value.get('errors'):
                 errors = True
                 break
         

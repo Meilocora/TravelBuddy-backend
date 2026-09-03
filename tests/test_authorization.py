@@ -1,5 +1,6 @@
-from db import db
 from app.models import Journey, Medium
+from db import db
+
 
 def test_user_cannot_delete_foreign_journey(
     client,

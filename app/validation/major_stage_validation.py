@@ -1,6 +1,5 @@
-from datetime import datetime
 import locale
-from db import db
+
 from app.validation.validation import Validation
 
 # Set German locale with fallback for different operating systems
@@ -31,7 +30,7 @@ class MajorStageValidation(Validation):
         for key, value in majorStage.items():
             if key != 'additional_info':
                 if value['value'] == "" or value['value'] == None:
-                    majorStage[key]['errors'].append(f'Input is required')
+                    value['errors'].append('Input is required')
                     majorStage[key]['isValid'] = False
             
                  
@@ -97,7 +96,7 @@ class MajorStageValidation(Validation):
                 majorStage['budget']['isValid'] = False
             
         for key, value in majorStage.items():
-            if 'errors' in value and value['errors']:
+            if value.get('errors'):
                 errors = True
                 break
         
@@ -112,7 +111,7 @@ class MajorStageValidation(Validation):
         for key, value in majorStage.items():
             if key != 'additional_info':
                 if value['value'] == "" or value['value'] == None:
-                    majorStage[key]['errors'].append(f'Input is required')
+                    value['errors'].append('Input is required')
                     majorStage[key]['isValid'] = False
             
                  
@@ -187,7 +186,7 @@ class MajorStageValidation(Validation):
                 majorStage['budget']['isValid'] = False
             
         for key, value in majorStage.items():
-            if 'errors' in value and value['errors']:
+            if value.get('errors'):
                 errors = True
                 break
         

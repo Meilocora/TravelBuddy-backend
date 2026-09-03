@@ -1,8 +1,24 @@
+from app.models import (
+    Accommodation,
+    Activity,
+    Costs,
+    CustomCountry,
+    Journey,
+    JourneysCustomCountriesLink,
+    MajorStage,
+    Medium,
+    MinorStage,
+    PlaceToVisit,
+    Spendings,
+    Transportation,
+)
 from app.routes.resource_access import get_user_journey
+from app.routes.util import (
+    calculate_time_zone_offset,
+    formatDateTimeToString,
+    formatDateToString,
+)
 from db import db
-from app.models import Journey, Costs, Spendings, MajorStage, MinorStage, CustomCountry, JourneysCustomCountriesLink, Transportation, Accommodation, Activity, PlaceToVisit, Medium
-from app.routes.util import formatDateToString, formatDateTimeToString
-from app.routes.util import calculate_time_zone_offset
 
 
 def fetch_journeys(current_user):

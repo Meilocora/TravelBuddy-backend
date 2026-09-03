@@ -1,11 +1,19 @@
-from flask import Blueprint, request, jsonify
-from db import db
-from app.routes.route_protection import token_required
-from app.routes.util import parseDate, formatDateToString, get_users_stages_titles
-from app.models import Journey, Costs, Spendings, MajorStage,  CustomCountry, JourneysCustomCountriesLink
-from app.validation.journey_validation import JourneyValidation
+from flask import Blueprint, jsonify, request
+
+from app.models import (
+    Costs,
+    CustomCountry,
+    Journey,
+    JourneysCustomCountriesLink,
+    MajorStage,
+    Spendings,
+)
 from app.routes.db_util import fetch_journeys
 from app.routes.resource_access import get_user_journey
+from app.routes.route_protection import token_required
+from app.routes.util import formatDateToString, get_users_stages_titles, parseDate
+from app.validation.journey_validation import JourneyValidation
+from db import db
 
 journey_bp = Blueprint('journey', __name__)
 

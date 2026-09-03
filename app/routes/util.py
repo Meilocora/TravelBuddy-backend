@@ -1,11 +1,23 @@
 from datetime import datetime
-from geopy.geocoders import Nominatim
+
+import pytz
 from countryinfo import CountryInfo
 from currency_converter import CurrencyConverter
+from geopy.geocoders import Nominatim
 from timezonefinder import TimezoneFinder
-import pytz
+
+from app.models import (
+    Accommodation,
+    Activity,
+    Costs,
+    Currency,
+    Journey,
+    MajorStage,
+    MinorStage,
+    Spendings,
+    Transportation,
+)
 from db import db
-from app.models import Journey, Costs, Spendings, Transportation, MajorStage, MinorStage, Accommodation, Activity, Currency
 
 
 def parseDate(dateString: str): 
@@ -128,7 +140,7 @@ def get_local_currency(lat, lng):
 c = CurrencyConverter()
 
 from babel.numbers import get_currency_name, get_currency_symbol
-from babel import Locale
+
 
 def get_currency_info(currency_code, locale_str='en_US'):
     try:
@@ -140,7 +152,7 @@ def get_currency_info(currency_code, locale_str='en_US'):
             'name': name,
             'symbol': symbol
         }
-    except Exception as e:
+    except Exception:
         return {
             'code': currency_code,
             'name': currency_code,
@@ -190,7 +202,7 @@ def get_conversion_rate(currency_code, base_currency='EUR'):
     try:
         rate = c.convert(1, base_currency, currency_code)
         return rate
-    except Exception as e:
+    except Exception:
         return None
 
 

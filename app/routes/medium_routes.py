@@ -1,11 +1,11 @@
-from flask import Blueprint, request, jsonify
-from app.routes.util import parseDateTime
-from db import db
-from app.routes.route_protection import token_required
+from flask import Blueprint, jsonify, request
+
 from app.models import Medium
 from app.routes.db_util import fetch_media
 from app.routes.resource_access import get_user_medium
-
+from app.routes.route_protection import token_required
+from app.routes.util import parseDateTime
+from db import db
 
 medium_bp = Blueprint('medium', __name__)
 

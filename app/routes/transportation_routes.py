@@ -1,11 +1,19 @@
 from flask import Blueprint, jsonify, request
-from app.routes.resource_access import get_user_major_stage, get_user_minor_stage, get_user_transportation
-from db import db
+
+from app.models import Costs, Journey, MajorStage, Transportation
+from app.routes.resource_access import (
+    get_user_major_stage,
+    get_user_minor_stage,
+    get_user_transportation,
+)
 from app.routes.route_protection import token_required
-from app.routes.util import parseDateTime, formatDateTimeToString
-from app.models import Costs, Journey, MajorStage, MinorStage, Transportation
+from app.routes.util import (
+    calculate_journey_costs,
+    formatDateTimeToString,
+    parseDateTime,
+)
 from app.validation.transportation_validation import TransportationValidation
-from app.routes.util import calculate_journey_costs
+from db import db
 
 transportation_bp = Blueprint('transportation', __name__)
 

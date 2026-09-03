@@ -3,21 +3,18 @@ from datetime import datetime, timedelta, timezone
 import jwt
 import pytest
 
-from db import db
-from server import create_app
-
 # Important: ensures all SQLAlchemy models are registered
-import app.models  # noqa: F401
-
+import app.models
 from app.models import (
-    User,
+    Activity,
     Journey,
     MajorStage,
-    MinorStage,
-    Activity,
     Medium,
+    MinorStage,
+    User,
 )
-
+from db import db
+from server import create_app
 
 TEST_SECRET_KEY = "travelbuddy-test-secret-key"
 

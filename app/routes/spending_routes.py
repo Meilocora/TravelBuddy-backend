@@ -1,11 +1,16 @@
 from flask import Blueprint, jsonify, request
-from db import db
-from app.routes.route_protection import token_required
-from app.routes.util import parseDate, formatDateToString, get_all_currencies, get_conversion_rate
-from app.models import Costs, Journey,  MinorStage, MajorStage, Spendings
+
+from app.models import Costs, Journey, MajorStage, MinorStage, Spendings
 from app.routes.resource_access import get_user_minor_stage, get_user_spending
+from app.routes.route_protection import token_required
+from app.routes.util import (
+    calculate_journey_costs,
+    formatDateToString,
+    get_all_currencies,
+    parseDate,
+)
 from app.validation.spending_validation import SpendingValidation
-from app.routes.util import calculate_journey_costs
+from db import db
 
 spending_bp = Blueprint('spending', __name__)
 

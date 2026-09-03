@@ -1,4 +1,5 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, jsonify, request
+
 from app.routes.route_protection import token_required
 from app.routes.util import calculate_time_zone_offset, get_local_currency
 

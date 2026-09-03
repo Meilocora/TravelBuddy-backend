@@ -1,11 +1,13 @@
-from flask import Blueprint, request, jsonify
-from app.routes.resource_access import get_user_custom_country
-from db import db
+import re
+
 from countryinfo import CountryInfo
+from flask import Blueprint, jsonify, request
+
 from app.models import CustomCountry, Journey, PlaceToVisit
+from app.routes.resource_access import get_user_custom_country
 from app.routes.route_protection import token_required
 from app.routes.util import safe_countryinfo_attr
-import re
+from db import db
 
 country_bp = Blueprint('country', __name__)
 

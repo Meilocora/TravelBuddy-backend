@@ -1,20 +1,20 @@
 from sqlalchemy import or_
 
-from db import db
 from app.models import (
-    Journey,
-    CustomCountry,
-    MajorStage,
-    MinorStage,
-    Costs,
-    Spendings,
-    Transportation,
     Accommodation,
     Activity,
-    PlaceToVisit,
-    Medium,
+    Costs,
     Currency,
+    CustomCountry,
+    Journey,
+    MajorStage,
+    Medium,
+    MinorStage,
+    PlaceToVisit,
+    Spendings,
+    Transportation,
 )
+from db import db
 
 
 def _single_result(statement):

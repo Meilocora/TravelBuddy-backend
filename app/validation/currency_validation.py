@@ -1,5 +1,5 @@
 from app.validation.validation import Validation
-from app.routes.util import get_all_currencies
+
 
 class CurrencyValidation(Validation):
   def __init__(self):
@@ -12,7 +12,7 @@ class CurrencyValidation(Validation):
       
         for key, value in currency.items():
             if value['value'] == "" or value['value'] == None:
-                currency[key]['errors'].append(f'Input is required')
+                value['errors'].append('Input is required')
                 currency[key]['isValid'] = False         
             
         code_val = CurrencyValidation().validate_string(currency['code']['value'], min_length=1, max_length=6)
@@ -36,7 +36,7 @@ class CurrencyValidation(Validation):
             currency['conversionRate']['isValid'] = False
             
         for key, value in currency.items():
-            if 'errors' in value and value['errors']:
+            if value.get('errors'):
                 errors = True
                 break
         

@@ -1,4 +1,5 @@
 import locale
+
 from app.validation.validation import Validation
 
 # Set German locale with fallback for different operating systems
@@ -28,12 +29,12 @@ class ActivityValidation(Validation):
                             
         try:
             if activity['name']['value'] == "" or activity['name']['value'] == None:
-                activity['name']['errors'].append(f'Input is required')
+                activity['name']['errors'].append('Input is required')
                 activity['name']['isValid'] = False  
                 errors = True                
                 return activity, not errors
         except KeyError:
-            activity['name']['errors'].append(f'Input is required')
+            activity['name']['errors'].append('Input is required')
             activity['name']['isValid'] = False   
             errors = True
             return activity, not errors
@@ -70,7 +71,7 @@ class ActivityValidation(Validation):
             
             
         for key, value in activity.items():
-            if 'errors' in value and value['errors']:
+            if value.get('errors'):
                 errors = True
                 break
         

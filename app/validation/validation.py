@@ -1,5 +1,6 @@
-from datetime import datetime, date
 import re
+from datetime import date, datetime
+
 
 class Validation:
   def __init__(self):

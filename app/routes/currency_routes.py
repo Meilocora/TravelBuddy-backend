@@ -1,9 +1,10 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, jsonify, request
+
+from app.models import Currency
 from app.routes.resource_access import get_user_currency
+from app.routes.route_protection import token_required
 from app.validation.currency_validation import CurrencyValidation
 from db import db
-from app.models import Currency
-from app.routes.route_protection import token_required
 
 currency_bp = Blueprint('currency', __name__)
     

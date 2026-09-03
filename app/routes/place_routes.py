@@ -1,10 +1,10 @@
-from flask import Blueprint, request, jsonify
-from app.routes.resource_access import get_user_minor_stage, get_user_place
-from db import db
-from app.models import PlaceToVisit, CustomCountry, MinorStage
-from app.validation.place_validation import PlaceValidation
-from app.routes.route_protection import token_required
+from flask import Blueprint, jsonify, request
 
+from app.models import CustomCountry, PlaceToVisit
+from app.routes.resource_access import get_user_minor_stage, get_user_place
+from app.routes.route_protection import token_required
+from app.validation.place_validation import PlaceValidation
+from db import db
 
 place_bp = Blueprint('place-to-visit', __name__)
 

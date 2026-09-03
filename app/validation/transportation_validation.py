@@ -1,4 +1,5 @@
 import locale
+
 from app.validation.validation import Validation
 
 # Set German locale with fallback for different operating systems
@@ -29,7 +30,7 @@ class TransportationValidation(Validation):
         for key, value in transportation.items():
             if key != 'transportation_costs' and key != 'link' and key != 'departure_latitude' and key != 'departure_longitude' and key != 'arrival_latitude' and key != 'arrival_longitude' and key != 'unconvertedAmount':
                 if value['value'] == "" or value['value'] == None:
-                    transportation[key]['errors'].append(f'Input is required')
+                    value['errors'].append('Input is required')
                     transportation[key]['isValid'] = False
                  
         type_val = TransportationValidation().validate_transportation_type(transportation['type']['value'])
@@ -88,7 +89,7 @@ class TransportationValidation(Validation):
             
             
         for key, value in transportation.items():
-            if 'errors' in value and value['errors']:
+            if value.get('errors'):
                 errors = True
                 break
         

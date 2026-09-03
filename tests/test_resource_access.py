@@ -1,9 +1,9 @@
 from app.routes.resource_access import (
+    get_user_activity,
     get_user_journey,
     get_user_major_stage,
-    get_user_minor_stage,
-    get_user_activity,
     get_user_medium,
+    get_user_minor_stage,
 )
 
 

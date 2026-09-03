@@ -1,5 +1,5 @@
-from datetime import datetime
 import locale
+
 from app.validation.validation import Validation
 
 # Set German locale with fallback for different operating systems
@@ -30,7 +30,7 @@ class MinorStageValidation(Validation):
         for key, value in minorStage.items():
             if key != 'accommodation_name' and key != 'accommodation_place' and key != 'accommodation_costs' and key != 'accommodation_link' and key != 'accommodation_latitude' and key != 'accommodation_longitude' and key != 'unconvertedAmount':
                 if value['value'] == "" or value['value'] == None:
-                    minorStage[key]['errors'].append(f'Input is required')
+                    value['errors'].append('Input is required')
                     minorStage[key]['isValid'] = False
                  
         title_val = MinorStageValidation().validate_string(minorStage['title']['value'], min_length=3, max_length=50)
@@ -106,7 +106,7 @@ class MinorStageValidation(Validation):
                 minorStage['budget']['isValid'] = False
             
         for key, value in minorStage.items():
-            if 'errors' in value and value['errors']:
+            if value.get('errors'):
                 errors = True
                 break
                 

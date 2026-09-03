@@ -1,6 +1,8 @@
-from app.models import User 
-from app.validation.validation import Validation
 import bcrypt
+
+from app.models import User
+from app.validation.validation import Validation
+
 
 class AuthValidation(Validation):
   def __init__(self):
@@ -14,10 +16,10 @@ class AuthValidation(Validation):
         for key, value in signUpData.items():
             try: 
                 if value['value'] == "" or value['value'] == None:
-                    signUpData[key]['errors'].append(f'Input is required')
+                    value['errors'].append('Input is required')
                     signUpData[key]['isValid'] = False
             except KeyError:
-                signUpData['username']['errors'].append(f", Inputs is required")
+                signUpData['username']['errors'].append(", Inputs is required")
                 signUpData['username']['isValid'] = False
                 errors = True
                 return signUpData, not errors
@@ -39,7 +41,7 @@ class AuthValidation(Validation):
         #     signUpData['password']['isValid'] = False
                 
         for key, value in signUpData.items():
-            if 'errors' in value and value['errors']:
+            if value.get('errors'):
                 errors = True
                 break
         
@@ -53,10 +55,10 @@ class AuthValidation(Validation):
         for key, value in nameChangeData.items():
             try: 
                 if value['value'] == "" or value['value'] == None:
-                    nameChangeData[key]['errors'].append(f'Input is required')
+                    value['errors'].append('Input is required')
                     nameChangeData[key]['isValid'] = False
             except KeyError:
-                nameChangeData['username']['errors'].append(f", Inputs is required")
+                nameChangeData['username']['errors'].append(", Inputs is required")
                 nameChangeData['username']['isValid'] = False
                 errors = True
                 return nameChangeData, not errors
@@ -79,7 +81,7 @@ class AuthValidation(Validation):
             errors = True
 
         for key, value in nameChangeData.items():
-            if 'errors' in value and value['errors']:
+            if value.get('errors'):
                 errors = True
                 break
 
@@ -93,10 +95,10 @@ class AuthValidation(Validation):
         for key, value in passwordChangeData.items():
             try:
                 if value['value'] == "" or value['value'] == None:
-                    passwordChangeData[key]['errors'].append(f'Input is required')
+                    value['errors'].append('Input is required')
                     passwordChangeData[key]['isValid'] = False
             except KeyError:
-                passwordChangeData['currentPassword']['errors'].append(f", Inputs is required")
+                passwordChangeData['currentPassword']['errors'].append(", Inputs is required")
                 passwordChangeData['currentPassword']['isValid'] = False
                 errors = True
                 return passwordChangeData, not errors
@@ -122,7 +124,7 @@ class AuthValidation(Validation):
             errors = True
 
         for key, value in passwordChangeData.items():
-            if 'errors' in value and value['errors']:
+            if value.get('errors'):
                 errors = True
                 break
 

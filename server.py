@@ -4,21 +4,19 @@ from dotenv import load_dotenv
 from flask import Flask
 from flask_cors import CORS
 
-from db import db
-
-from app.routes.journey_routes import journey_bp
-from app.routes.major_stage_routes import major_stage_bp
-from app.routes.minor_stage_routes import minor_stage_bp
+from app.routes.activity_routes import activity_bp
 from app.routes.auth_routes import auth_bp
 from app.routes.country_routes import country_bp
-from app.routes.place_routes import place_bp
-from app.routes.transportation_routes import transportation_bp
-from app.routes.activity_routes import activity_bp
-from app.routes.spending_routes import spending_bp
-from app.routes.user_routes import user_bp
-from app.routes.medium_routes import medium_bp
 from app.routes.currency_routes import currency_bp
-
+from app.routes.journey_routes import journey_bp
+from app.routes.major_stage_routes import major_stage_bp
+from app.routes.medium_routes import medium_bp
+from app.routes.minor_stage_routes import minor_stage_bp
+from app.routes.place_routes import place_bp
+from app.routes.spending_routes import spending_bp
+from app.routes.transportation_routes import transportation_bp
+from app.routes.user_routes import user_bp
+from db import db
 
 load_dotenv()
 

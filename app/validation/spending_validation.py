@@ -1,4 +1,5 @@
 import locale
+
 from app.validation.validation import Validation
 
 # Set German locale with fallback for different operating systems
@@ -28,7 +29,7 @@ class SpendingValidation(Validation):
         
         for key, value in spending.items():
             if value['value'] == "" or value['value'] == None or value['value'] == 0:
-                spending[key]['errors'].append(f'Input is required')
+                value['errors'].append('Input is required')
                 spending[key]['isValid'] = False
                  
         name_val = SpendingValidation().validate_string(spending['name']['value'], min_length=3, max_length=50)
@@ -52,7 +53,7 @@ class SpendingValidation(Validation):
             spending['category']['isValid'] = False
                         
         for key, value in spending.items():
-            if 'errors' in value and value['errors']:
+            if value.get('errors'):
                 errors = True
                 break
         

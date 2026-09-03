@@ -1,13 +1,14 @@
 from flask import Blueprint, jsonify, request
-from db import db
-from app.routes.route_protection import token_required
-from app.models import Costs, Journey,  MinorStage, MajorStage, Activity
-from app.validation.activity_validation import ActivityValidation
-from app.routes.util import calculate_journey_costs
+
+from app.models import Activity, Costs, Journey, MajorStage, MinorStage
 from app.routes.resource_access import (
-    get_user_minor_stage,
     get_user_activity,
+    get_user_minor_stage,
 )
+from app.routes.route_protection import token_required
+from app.routes.util import calculate_journey_costs
+from app.validation.activity_validation import ActivityValidation
+from db import db
 
 activity_bp = Blueprint('activity', __name__)
 
