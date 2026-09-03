@@ -111,25 +111,78 @@ def delete_medium(current_user, mediumId):
         return jsonify({'error': str(e)}, 500)
     
 
-@medium_bp.route('/delete-media', methods=['DELETE'])
+# @medium_bp.route('/delete-media', methods=['DELETE'])
+# @token_required
+# def delete_media(current_user):
+#     try:
+#         data = request.get_json()        
+#         mediumIds = data if isinstance(data, list) else data.get('ids', [])
+                
+#         if not isinstance(mediumIds, list) or len(mediumIds) == 0:
+#             return jsonify({'error': 'Invalid or empty ids list'}), 400
+        
+#         for mediumId in mediumIds:       
+#             medium = db.session.query(Medium).filter(Medium.id == mediumId).first()
+#             if not medium:
+#                 return jsonify({'error': f'Medium with id {mediumId} not found'}), 404
+#             db.session.delete(medium)
+                    
+#         db.session.commit()
+                
+#         return jsonify({'status': 200}), 200
+#     except Exception as e:
+#         db.session.rollback()
+#         return jsonify({'error': str(e)}), 500
+
+@medium_bp.route("/delete-media", methods=["DELETE"])
 @token_required
 def delete_media(current_user):
     try:
-        data = request.get_json()        
-        mediumIds = data if isinstance(data, list) else data.get('ids', [])
-                
-        if not isinstance(mediumIds, list) or len(mediumIds) == 0:
-            return jsonify({'error': 'Invalid or empty ids list'}), 400
-        
-        for mediumId in mediumIds:       
-            medium = db.session.query(Medium).filter(Medium.id == mediumId).first()
-            if not medium:
-                return jsonify({'error': f'Medium with id {mediumId} not found'}), 404
+        data = request.get_json()
+
+        medium_ids = (
+            data
+            if isinstance(data, list)
+            else data.get("ids", [])
+        )
+
+        if (
+            not isinstance(medium_ids, list)
+            or not medium_ids
+        ):
+            return jsonify({
+                "error": "Invalid or empty ids list"
+            }), 400
+
+        media = []
+
+        # Validate ALL resources before deleting anything
+        for medium_id in medium_ids:
+            medium = get_user_medium(
+                current_user,
+                medium_id,
+            )
+
+            if medium is None:
+                return jsonify({
+                    "error": "Medium not found"
+                }), 404
+
+            media.append(medium)
+
+        # Only delete after all IDs have been validated
+        for medium in media:
             db.session.delete(medium)
-                    
+
         db.session.commit()
-                
-        return jsonify({'status': 200}), 200
-    except Exception as e:
+
+        return jsonify({
+            "status": 200
+        }), 200
+
+    except Exception:
         db.session.rollback()
-        return jsonify({'error': str(e)}), 500
+
+        return jsonify({
+            "error": "Internal server error"
+        }), 500

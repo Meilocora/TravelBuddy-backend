@@ -19,6 +19,28 @@ REFRESHTOKEN_DURATION = 7  # duration in days
 
 auth_bp = Blueprint('auth', __name__)
 
+def create_access_token(user):
+    return jwt.encode({
+        "user_id": user.id,
+        "username": user.username,
+        "type": "access",
+        "exp": datetime.datetime.now(
+            datetime.timezone.utc
+        ) + datetime.timedelta(hours=TOKEN_DURATION)
+    }, SECRET_KEY, algorithm="HS256")
+
+
+def create_refresh_token(user):
+    return jwt.encode({
+        "user_id": user.id,
+        "username": user.username,
+        "type": "refresh",
+        "exp": datetime.datetime.now(
+            datetime.timezone.utc
+        ) + datetime.timedelta(days=REFRESHTOKEN_DURATION)
+    }, SECRET_KEY, algorithm="HS256")
+
+
 @auth_bp.route('/login-user', methods=['POST'])
 def login():
     try:
@@ -26,22 +48,13 @@ def login():
         user = User.query.filter_by(email=loginData['email']['value']).first()
         
         if user and bcrypt.checkpw(loginData['password']['value'].encode('utf-8'), user.password.encode('utf-8')):
-            token = jwt.encode({
-                'user_id': user.id,
-                'username': user.username,
-                'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=TOKEN_DURATION)
-            }, SECRET_KEY, algorithm='HS256')
-            
-            refresh_token = jwt.encode({
-                'user_id': user.id,
-                'username': user.username,
-                'exp': datetime.datetime.utcnow() + datetime.timedelta(days=REFRESHTOKEN_DURATION)
-            }, SECRET_KEY, algorithm='HS256')
+            token = create_access_token(user)
+            refresh_token = create_refresh_token(user)
             return jsonify({'status': 200, 'token': token, 'refreshToken': refresh_token})
         else:
-            return jsonify({'error': 'Invalid credentials','status': 401})
+            return jsonify({'error': 'Invalid credentials'}), 401
     except Exception as e:
-        return jsonify({'error': str(e), 'status': 500})
+        return jsonify({'error': str(e)}), 500
 
 
 @auth_bp.route('/create-user', methods=['POST'])
@@ -49,12 +62,12 @@ def register():
     try:
         signUpData = request.get_json()
     except:
-        return jsonify({'error': 'Unknown error'}, 400)
+        return jsonify({'error': 'Unknown error'}), 400
         
     response, isValid = AuthValidation.validate_signUp(signUpData=signUpData)
     
     if not isValid:
-        return jsonify({'authFormValues': response, 'status': 400})
+        return jsonify({'authFormValues': response}), 400
 
     # Check if email or username already exists
     existing_user = User.query.filter(
@@ -67,7 +80,7 @@ def register():
             response['email']['errors'].append('Email already exists')
         if existing_user.username == signUpData['username']['value']:
             response['username']['errors'].append('Username already exists')
-        return jsonify({'authFormValues': response, 'status': 400})
+        return jsonify({'authFormValues': response}), 400
     
     # Hash the password
     hashed_password = bcrypt.hashpw(signUpData['password']['value'].encode('utf-8'), bcrypt.gensalt())
@@ -83,47 +96,44 @@ def register():
         db.session.commit()
         
         # Create a token and a refreshtoken with expiration date
-        token = jwt.encode({
-            'user_id': new_user.id,
-            'username': new_user.username,
-            'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=TOKEN_DURATION)
-        }, SECRET_KEY, algorithm='HS256')
+        token = create_access_token(new_user)
+        refresh_token = create_refresh_token(new_user)
         
-        refresh_token = jwt.encode({
-            'user_id': new_user.id,
-            'username': new_user.username,
-            'exp': datetime.datetime.utcnow() + datetime.timedelta(days=REFRESHTOKEN_DURATION)
-        }, SECRET_KEY, algorithm='HS256')
-        
-        return jsonify({'status': 201, 'token': token, 'refreshToken': refresh_token})
+        return jsonify({'token': token, 'refreshToken': refresh_token}), 201
     except Exception as e:
-        return jsonify({'error': str(e), 'status': 500})
+        return jsonify({'error': str(e)}), 500
   
 
 @auth_bp.route('/refresh-token', methods=['POST'])
 def refresh_token():
     try:
         refresh_token = request.json.get('refreshToken')
-        decoded_refresh_token = jwt.decode(refresh_token, SECRET_KEY, algorithms=['HS256'])
+
+        decoded_refresh_token = jwt.decode(
+            refresh_token,
+            SECRET_KEY,
+            algorithms=["HS256"]
+        )
+
+        if decoded_refresh_token.get("type") != "refresh":
+            return jsonify({
+                "error": "Invalid token type"
+            }), 401
+
         user_id = decoded_refresh_token['user_id']
-        username = decoded_refresh_token['username']
+
+        user = User.query.get(user_id)
+        if not user:
+            return jsonify({'error': 'User not found'}), 404
+
         
         # Generate new tokens
-        new_token = jwt.encode({
-            'user_id': user_id,
-            'username': username,
-            'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=TOKEN_DURATION)
-        }, SECRET_KEY, algorithm='HS256')
-        
-        new_refresh_token = jwt.encode({
-            'user_id': user_id,
-            'username': username,
-            'exp': datetime.datetime.utcnow() + datetime.timedelta(days=REFRESHTOKEN_DURATION)
-        }, SECRET_KEY, algorithm='HS256')
-        
-        return jsonify({'newToken': new_token, 'newRefreshToken': new_refresh_token})
+        new_token = create_access_token(user)
+        new_refresh_token = create_refresh_token(user)
+
+        return jsonify({'newToken': new_token, 'newRefreshToken': new_refresh_token}), 200
     except Exception as e:
-        return jsonify({'error': str(e), 'status': 500})
+        return jsonify({'error': str(e)}), 500
  
  
 @auth_bp.route('/get-user-infos', methods=['GET'])
@@ -134,7 +144,7 @@ def get_user_infos(current_user):
     if not isinstance(user_info, Exception):
         return jsonify({'username': user_info.username, 'email': user_info.email, 'status': 200})
     else:
-        return jsonify({'error': str(user_info)}, 500)
+        return jsonify({'error': str(user_info)}), 500
 
 
 @auth_bp.route('/change-username', methods=['POST'])
@@ -144,12 +154,12 @@ def change_username(current_user):
         nameFormValues = request.get_json()
         currentUserData = db.get_or_404(User, current_user)
     except:
-        return jsonify({'error': 'Unknown error'}, 400)
+        return jsonify({'error': 'Unknown error'}), 400
         
     response, isValid = AuthValidation.validate_change_username(nameChangeData=nameFormValues, currentUserData=currentUserData)
     
     if not isValid:
-        return jsonify({'nameFormValues': response, 'status': 400})
+        return jsonify({'nameFormValues': response}), 400
 
     try:
         # Update the user data
@@ -158,7 +168,7 @@ def change_username(current_user):
         ))
         db.session.commit()
     except Exception as e:
-        return jsonify({'error': str(e)}, 400)
+        return jsonify({'error': str(e)}), 400
     else:
         return jsonify({'newUsername': nameFormValues['newUsername']['value'], 'status': 200})
     
@@ -171,12 +181,12 @@ def change_password(current_user):
         currentUserData = User.query.filter_by(id=current_user).first()
         
     except:
-        return jsonify({'error': 'Unknown error'}, 400)
+        return jsonify({'error': 'Unknown error'}), 400
 
     response, isValid = AuthValidation.validate_change_password(passwordChangeData=passwordFormValues, currentUserData=currentUserData)
 
     if not isValid:
-        return jsonify({'passwordFormValues': response, 'status': 400})
+        return jsonify({'passwordFormValues': response}), 400
 
     try:
         # Hash the password
@@ -188,6 +198,6 @@ def change_password(current_user):
         ))
         db.session.commit()
     except Exception as e:
-        return jsonify({'error': str(e)}, 400)
+        return jsonify({'error': str(e)}), 400
     else:
         return jsonify({'status': 200})

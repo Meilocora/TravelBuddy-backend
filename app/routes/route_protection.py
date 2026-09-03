@@ -1,32 +1,52 @@
-import jwt
-from flask import request, jsonify
-from functools import wraps
-from dotenv import load_dotenv
 import os
+from functools import wraps
 
-# Load environment variables from .env file
-load_dotenv()
-
-SECRET_KEY = os.getenv('SECRET_KEY')
+import jwt
+from flask import request, jsonify, current_app
 
 def token_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
-        token = None
-        if 'Authorization' in request.headers:
-            token = request.headers['Authorization'].split(" ")[1]
-        
-        if not token:
-            return jsonify({'error': 'Token is missing!'}), 401
-        
+        auth_header = request.headers.get("Authorization", "")
+
+        parts = auth_header.split()
+
+        if len(parts) != 2 or parts[0].lower() != "bearer":
+            return jsonify({
+                "error": "Invalid authorization header"
+            }), 401
+
+        token = parts[1]
+
         try:
-            data = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
-            current_user = data['user_id']
+            data = jwt.decode(
+                token,
+                current_app.config["SECRET_KEY"],
+                algorithms=["HS256"]
+            )
+
+            if data.get("type") != "access":
+                return jsonify({
+                    "error": "Invalid token type"
+                }), 401
+
+            current_user = data.get("user_id")
+
+            if current_user is None:
+                return jsonify({
+                    "error": "Invalid token"
+                }), 401
+
         except jwt.ExpiredSignatureError:
-            return jsonify({'error': 'Token has expired!'}), 401
+            return jsonify({
+                "error": "Token has expired"
+            }), 401
+
         except jwt.InvalidTokenError:
-            return jsonify({'error': 'Invalid token!'}), 401
-                
+            return jsonify({
+                "error": "Invalid token"
+            }), 401
+
         return f(current_user, *args, **kwargs)
-    
+
     return decorated
