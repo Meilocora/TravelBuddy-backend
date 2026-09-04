@@ -108,7 +108,7 @@ The API is separated into Flask blueprints based on domain responsibilities.
 | Media          | `/medium`         |
 | Currencies     | `/currency`       |
 
-The individual routes provide operations for creating, retrieving, updating and deleting the corresponding resources.
+The individual routes provide CRUD operations as well as domain-specific actions such as stage reordering, resource linking and travel-related data processing.
 
 ---
 
@@ -205,7 +205,7 @@ ruff check .
 
 GitHub Actions automatically executes code-quality checks and the automated test suite for repository changes.
 
-This provides an additional clean environment in which the backend can be validated independently of the local development setup.
+This ensures that code quality checks and tests also pass in a clean environment independent of the local development setup.
 
 ---
 
@@ -305,6 +305,7 @@ HOST=127.0.0.1
 SECRET_KEY=your_secure_secret_key
 SQLALCHEMY_DATABASE_URI=your_database_connection_string
 FLASK_DEBUG=false
+PORT=5001
 ```
 
 Secrets and credentials are intentionally excluded from version control.
@@ -330,13 +331,11 @@ The API will then be available using the configured host and port.
 
 ---
 
-## Project Status
+TravelBuddy is a personal full-stack portfolio project focused on building and refining a realistic mobile application architecture.
 
-TravelBuddy Backend is an actively developed personal full-stack project.
+The core API, relational data model, authentication, resource-level authorization and automated security tests are implemented.
 
-The core API, relational data model, authentication, authorization and automated security tests are implemented.
-
-Current development is focused primarily on:
+Current development focuses primarily on:
 
 - maintainability
 - code quality
@@ -344,7 +343,7 @@ Current development is focused primarily on:
 - documentation
 - API consistency
 
-The project is intended as a portfolio and learning project and is not currently presented as a production-ready commercial service.
+The project is not currently operated as a production commercial service.
 
 ---
 
