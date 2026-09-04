@@ -146,13 +146,13 @@ def update_journey(current_user, journeyId):
         if not former_countries.issubset(current_countries):
             missing_countries = former_countries - current_countries
             for delete_country in missing_countries:
-                db.session.execute(db.delete(MajorStage).where(MajorStage.country == delete_country))
+                db.session.execute(db.delete(MajorStage).where(MajorStage.journey_id == old_journey.id, MajorStage.country == delete_country))
                 db.session.commit()
                 
                 # Delete the connected entries from the link table
                 result = db.session.execute(db.select(CustomCountry).filter_by(name=delete_country, user_id=current_user))
                 delete_country_result = result.scalars().first()
-                db.session.execute(db.delete(JourneysCustomCountriesLink).where(JourneysCustomCountriesLink.custom_country_id == delete_country_result.id))
+                db.session.execute(db.delete(JourneysCustomCountriesLink).where(JourneysCustomCountriesLink.journey_id == old_journey.id, JourneysCustomCountriesLink.custom_country_id == delete_country_result.id))
                 db.session.commit()
         
         # Add new countries to the link table

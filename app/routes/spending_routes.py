@@ -73,20 +73,17 @@ def create_spending(current_user, minorStageId):
 @token_required 
 def update_spending(current_user, minorStageId, spendingId):
     try:
-        minor_stage = get_user_minor_stage(
-            current_user,
-            minorStageId
-        )
         old_spending = get_user_spending(
             current_user,
-            spendingId
+            spendingId,
+            minor_stage_id=minorStageId,
         )
         
-        if minor_stage is None or old_spending is None:
+        if old_spending is None:
             return jsonify({'error': 'Resource not found'}), 404
                 
         new_spending = request.get_json()
-        major_stage = db.get_or_404(MajorStage, minor_stage.major_stage_id)
+        major_stage = db.get_or_404(MajorStage, old_spending.major_stage_id)
         journey = db.get_or_404(Journey, major_stage.journey_id)
         journey_costs = db.session.execute(db.select(Costs).filter_by(journey_id=journey.id)).scalars().first()
          
@@ -125,8 +122,6 @@ def update_spending(current_user, minorStageId, spendingId):
 @spending_bp.route('/delete-spending/<int:spendingId>', methods=['DELETE'])
 @token_required
 def delete_spending(current_user, spendingId):
-    spending = db.get_or_404(Spendings, spendingId)
-    
     spending = get_user_spending(
         current_user,
         spendingId

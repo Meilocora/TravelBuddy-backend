@@ -1,7 +1,7 @@
 import re
 
 from countryinfo import CountryInfo
-from flask import Blueprint, current_app, jsonify, request
+from flask import Blueprint, jsonify, request
 
 from app.models import CustomCountry, Journey, PlaceToVisit
 from app.routes.resource_access import get_user_custom_country

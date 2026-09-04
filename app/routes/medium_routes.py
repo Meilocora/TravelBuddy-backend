@@ -2,7 +2,7 @@ from flask import Blueprint, jsonify, request
 
 from app.models import Medium
 from app.routes.db_util import fetch_media
-from app.routes.resource_access import get_user_medium
+from app.routes.resource_access import get_user_medium, get_user_minor_stage, get_user_place
 from app.routes.route_protection import token_required
 from app.routes.util import parseDateTime
 from db import db
@@ -25,6 +25,24 @@ def get_media(current_user):
 def add_media(current_user):
     try:
         mediumData = request.get_json()
+        
+        minor_stage_id = (
+            mediumData.get("minorStageId", {}).get("value")
+        )
+        
+        minor_stage = None
+
+        if minor_stage_id is not None:
+            minor_stage = get_user_minor_stage(
+                current_user,
+                int(minor_stage_id),
+            )
+
+            if minor_stage is None:
+                return jsonify({
+                    "error": "Minor stage not found"
+                }), 404
+                
     except Exception:
         return jsonify({'error': 'Internal server error'}), 400
     
@@ -58,7 +76,42 @@ def add_media(current_user):
 @token_required
 def update_medium(current_user, mediumId):
     try:
-        medium = request.get_json()
+        mediumData = request.get_json()
+        
+        minor_stage_id = (
+            mediumData.get("minorStageId", {}).get("value")
+        )
+        
+        minor_stage = None
+
+        if minor_stage_id is not None:
+            minor_stage = get_user_minor_stage(
+                current_user,
+                int(minor_stage_id),
+            )
+
+            if minor_stage is None:
+                return jsonify({
+                    "error": "Minor stage not found"
+                }), 404
+
+        place_id = (
+            mediumData.get("placeToVisitId", {}).get("value")
+        )
+        
+        place = None
+
+        if place_id is not None:
+            place = get_user_place(
+                current_user,
+                int(place_id),
+            )
+
+            if place is None:
+                return jsonify({
+                    "error": "Place not found"
+                }), 404
+        
         
         old_medium = get_user_medium(
             current_user,
@@ -78,13 +131,13 @@ def update_medium(current_user, mediumId):
             medium_type = old_medium.medium_type,
             url = old_medium.url,
             thumbnail_url = old_medium.thumbnail_url,
-            favorite=medium['favorite']['value'],
-            latitude=medium.get('latitude', {}).get('value', None),
-            longitude=medium.get('longitude', {}).get('value', None),
-            timestamp=parseDateTime(medium['timestamp']['value']),
-            description=medium['description']['value'],
-            minor_stage_id=medium.get('minorStageId', {}).get('value', None),
-            place_to_visit_id=medium.get('placeToVisitId', {}).get('value', None),
+            favorite=mediumData['favorite']['value'],
+            latitude=mediumData.get('latitude', {}).get('value', None),
+            longitude=mediumData.get('longitude', {}).get('value', None),
+            timestamp=parseDateTime(mediumData['timestamp']['value']),
+            description=mediumData['description']['value'],
+            minor_stage_id=minor_stage_id,
+            place_to_visit_id=place_id,
             duration=old_medium.duration
         ))
         db.session.commit()

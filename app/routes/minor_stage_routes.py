@@ -13,6 +13,7 @@ from app.routes.db_util import adjust_stages_orders
 from app.routes.resource_access import (
     get_user_major_stage,
     get_user_minor_stage,
+    get_user_minor_stages_by_ids
 )
 from app.routes.route_protection import token_required
 from app.routes.util import (
@@ -299,16 +300,62 @@ def delete_minor_stage(current_user, minorStageId):
         return jsonify({'error': 'Internal server error'}), 500
 
 
-@minor_stage_bp.route('/swap-minor-stages', methods=['POST'])
+@minor_stage_bp.route("/swap-minor-stages", methods=["POST"])
 @token_required
 def swap_minor_stages(current_user):
-    stagesPositionList = request.get_json()["stagesPositionList"]
+    data = request.get_json()
+    positions = data.get("stagesPositionList", [])
+
+    stage_ids = [
+        int(item["id"])
+        for item in positions
+    ]
+
+    owned_stages = get_user_minor_stages_by_ids(
+        current_user,
+        stage_ids,
+    )
+
+    owned_ids = {
+        stage.id
+        for stage in owned_stages
+    }
+
+    if owned_ids != set(stage_ids):
+        return jsonify({
+            "error": "One or more stages not found"
+        }), 404
+
+    # All reordered stages should belong
+    # to the same MajorStage.
+    major_stage_ids = {
+        stage.major_stage_id
+        for stage in owned_stages
+    }
+
+    if len(major_stage_ids) != 1:
+        return jsonify({
+            "error": "Stages belong to different major stages"
+        }), 400
+
     try:
-        for item in stagesPositionList:
-            db.session.execute(db.update(MinorStage).where(MinorStage.id == int(item['id'])).values(position=item['position']))
+        for item in positions:
+            db.session.execute(
+                db.update(MinorStage)
+                .where(
+                    MinorStage.id == int(item["id"])
+                )
+                .values(
+                    position=item["position"]
+                )
+            )
+
         db.session.commit()
-        
-        return jsonify({'status': 200})
+
+        return jsonify({"status": 200}), 200
+
     except Exception:
         db.session.rollback()
-        return jsonify({'error': 'Internal server error'}), 500
+        return jsonify({
+            "error": "Internal server error"
+        }), 500

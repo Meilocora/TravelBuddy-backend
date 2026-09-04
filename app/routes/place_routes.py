@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, request
 
 from app.models import CustomCountry, PlaceToVisit
-from app.routes.resource_access import get_user_minor_stage, get_user_place
+from app.routes.resource_access import get_user_custom_country, get_user_minor_stage, get_user_place
 from app.routes.route_protection import token_required
 from app.validation.place_validation import PlaceValidation
 from db import db
@@ -84,6 +84,20 @@ def get_places_by_country(current_user, minorStageId, countryName):
 def create_place(current_user):
     try:
         place = request.get_json()
+        
+        country_id = int(
+            place["countryId"]["value"]
+        )
+
+        custom_country = get_user_custom_country(
+            current_user,
+            country_id,
+        )
+
+        if custom_country is None:
+            return jsonify({
+                "error": "Country not found"
+            }), 404
     except Exception:
         return jsonify({'error': 'Unknown error'}), 400 
         
@@ -91,15 +105,13 @@ def create_place(current_user):
     if not isValid:
         return jsonify({'placeFormValues': response}), 400
     
-
-    
     try:
         # Remove line breaks from the name
         clean_name = place['name']['value'].replace('\n', ' ').replace('\r', ' ')
 
         # Create a new place
         new_place = PlaceToVisit(
-            custom_country_id=place['countryId']['value'],
+            custom_country_id=custom_country.id,
             name=clean_name,
             description=place['description']['value'],
             visited=place['visited']['value'],

@@ -85,15 +85,17 @@ def update_activity(current_user, minorStageId, activityId):
     try:
         old_activity = get_user_activity(
             current_user,
-            activityId
+            activityId,
+            minor_stage_id=minorStageId,
         )
-        minor_stage = get_user_minor_stage(current_user, minorStageId)
 
-        if old_activity is None or minor_stage is None:
-            return jsonify({'error': 'Resource not found'}), 404
-        
+        if old_activity is None:
+            return jsonify({
+                "error": "Activity not found"
+            }), 404
+            
         new_activity = request.get_json()
-        major_stage = db.get_or_404(MajorStage, minor_stage.major_stage_id)
+        major_stage = db.get_or_404(MajorStage, old_activity.major_stage_id)
         journey = db.get_or_404(Journey, major_stage.journey_id)
         journey_costs = db.session.execute(db.select(Costs).filter_by(journey_id=journey.id)).scalars().first()
          
