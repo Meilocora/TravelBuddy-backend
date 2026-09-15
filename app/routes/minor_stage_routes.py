@@ -78,7 +78,8 @@ def create_minor_stage(current_user, majorStageId):
             major_stage_id=majorStageId
         )
         db.session.add(new_minor_stage)
-        db.session.commit()
+        # TODO: Entfernen
+        # db.session.commit()
         
         
          # Remove line breaks from the name
@@ -94,7 +95,8 @@ def create_minor_stage(current_user, majorStageId):
             minor_stage_id=new_minor_stage.id
         )
         db.session.add(new_accommodation)
-        db.session.commit()
+        # TODO: Entfernen
+        # db.session.commit()
                 
         # Create a new costs for the minor stage
         costs = Costs(
@@ -104,9 +106,12 @@ def create_minor_stage(current_user, majorStageId):
             money_exceeded=False
         )
         db.session.add(costs)
-        db.session.commit()
+        # TODO: Entfernen
+        # db.session.commit()
         
         calculate_journey_costs(journey_costs)
+                
+        db.session.commit()
                 
         # build response major stage object for the frontend
         response_minor_stage = {'id': new_minor_stage.id,
@@ -190,8 +195,20 @@ def update_minor_stage(current_user, majorStageId, minorStageId):
             scheduled_end_time=parseDate(minor_stage['scheduled_end_time']['value']),
             position=minor_stage['position']['value']
         ))
-        db.session.commit()
+        # TODO: Entfernen
+        # db.session.commit()
                 
+        accommodation = db.session.execute(
+            db.select(Accommodation).filter_by(
+                minor_stage_id=minorStageId
+            )
+        ).scalars().first()
+
+        if accommodation is None:
+            accommodation = Accommodation(
+                minor_stage_id=minorStageId
+            )
+            db.session.add(accommodation)
         # Remove line breaks from the name
         clean_place = minor_stage['accommodation_place']['value'].replace('\n', ' ').replace('\r', ' ')
          # Update the accommodation for the minor stage
@@ -204,7 +221,8 @@ def update_minor_stage(current_user, majorStageId, minorStageId):
             link=minor_stage['accommodation_link']['value'],
             minor_stage_id=minorStageId
         ))
-        db.session.commit()
+        # TODO: Entfernen
+        # db.session.commit()
         
         # Update the costs for the minor stage
         db.session.execute(db.update(Costs).where(Costs.minor_stage_id == minorStageId).values(
@@ -212,9 +230,11 @@ def update_minor_stage(current_user, majorStageId, minorStageId):
             spent_money=minor_stage['spent_money']['value'],
             money_exceeded=money_exceeded,
         ))
-        db.session.commit()
+        # TODO: Entfernen
+        # db.session.commit()
         
         calculate_journey_costs(journey_costs)
+        db.session.commit()
         
         # build response minor stage object for the frontend
         response_minor_stage = {'id': minorStageId,
@@ -232,7 +252,7 @@ def update_minor_stage(current_user, majorStageId, minorStageId):
                                     'costs': minor_stage['accommodation_costs']['value'],
                                     'booked': minor_stage['accommodation_booked']['value'],
                                     'latitude': minor_stage.get('accommodation_latitude', {}).get('value', None),
-                                    'longitude': minor_stage.get('accommodation_latitude', {}).get('value', None),
+                                    'longitude': minor_stage.get('accommodation_longitude', {}).get('value', None),
                                     'link': minor_stage['accommodation_link']['value'],
                                 }
         }

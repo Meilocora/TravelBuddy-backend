@@ -1,22 +1,4 @@
-import locale
-
 from app.validation.validation import Validation
-
-# Set German locale with fallback for different operating systems
-try:
-    # Try Windows German locale first
-    locale.setlocale(locale.LC_ALL, 'German_Germany.1252')
-except locale.Error:
-    try:
-        # Try Unix/Linux German locale
-        locale.setlocale(locale.LC_ALL, 'de_DE.UTF-8')
-    except locale.Error:
-        try:
-            # Try shorter German locale
-            locale.setlocale(locale.LC_ALL, 'de_DE')
-        except locale.Error:
-            # Fall back to system default
-            locale.setlocale(locale.LC_ALL, '')
 
 class MinorStageValidation(Validation):
   def __init__(self):
@@ -92,18 +74,20 @@ class MinorStageValidation(Validation):
         if money_val:
             minorStage['budget']['errors'].append(f", {money_val}")
             minorStage['budget']['isValid'] = False
-        else:
-            minor_stages_budget = float(minorStage['budget']['value'])
-            major_stage_budget = major_stage_costs.budget
             
-            if existing_minor_stages_costs and existing_minor_stages_costs[0] != None:
-                for existing_minor_stage_costs in existing_minor_stages_costs:
-                    minor_stages_budget += existing_minor_stage_costs.budget
-            if minor_stages_budget > major_stage_budget:
-                max_available_money = major_stage_budget - minor_stages_budget + float(minorStage['budget']['value'])
-                max_available_money_str = locale.currency(max_available_money, grouping=True)
-                minorStage['budget']['errors'].append(f", Max available amount for major stage: {max_available_money_str}")
-                minorStage['budget']['isValid'] = False
+        # TODO: Validation hier ausgesetzt um unnötigen Backend-Error zu vermeiden. Ggf. den Teil komplett löschen 
+        # else:
+        #     minor_stages_budget = float(minorStage['budget']['value'])
+        #     major_stage_budget = major_stage_costs.budget
+            
+        #     if existing_minor_stages_costs and existing_minor_stages_costs[0] != None:
+        #         for existing_minor_stage_costs in existing_minor_stages_costs:
+        #             minor_stages_budget += existing_minor_stage_costs.budget
+        #     if minor_stages_budget > major_stage_budget:
+        #         max_available_money = major_stage_budget - minor_stages_budget + float(minorStage['budget']['value'])
+        #         max_available_money_str = locale.currency(max_available_money, grouping=True)
+        #         minorStage['budget']['errors'].append(f", Max available amount for major stage: {max_available_money_str}")
+        #         minorStage['budget']['isValid'] = False
             
         for key, value in minorStage.items():
             if value.get('errors'):

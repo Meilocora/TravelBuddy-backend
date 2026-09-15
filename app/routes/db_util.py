@@ -315,7 +315,8 @@ def adjust_stages_orders(other_stages, new_order, old_order=None):
         elif old_order > new_order:
             if stage.position < old_order and stage.position >= new_order:
                 stage.position = stage.position + 1
-        db.session.commit()
+        # TODO: Entfernen
+        # db.session.commit()
         
 def fetch_media(current_user):
     try:    

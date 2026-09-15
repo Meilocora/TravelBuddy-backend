@@ -58,7 +58,8 @@ def create_journey(current_user):
         )
          
         db.session.add(new_journey)
-        db.session.commit()
+        # TODO: Entfernen
+        # db.session.commit()
          
         # Create a new costs for the journey
         costs = Costs(
@@ -69,7 +70,8 @@ def create_journey(current_user):
         )
         
         db.session.add(costs)
-        db.session.commit()
+        # TODO: Entfernen
+        # db.session.commit()
         
         # Add connection between journey and custom countries to the link table
         added_countries = journey['countries']['value'].split(', ')
@@ -83,7 +85,10 @@ def create_journey(current_user):
                     custom_country_id=custom_country.id
                 )
                 db.session.add(new_link)
-                db.session.commit()
+                # TODO: Entfernen
+                # db.session.commit()
+        
+        db.session.commit()
         
         # build response journey object for the frontend
         response_journey = {'id': new_journey.id,
@@ -147,13 +152,15 @@ def update_journey(current_user, journeyId):
             missing_countries = former_countries - current_countries
             for delete_country in missing_countries:
                 db.session.execute(db.delete(MajorStage).where(MajorStage.journey_id == old_journey.id, MajorStage.country == delete_country))
-                db.session.commit()
+                # TODO: Entfernen
+                # db.session.commit()
                 
                 # Delete the connected entries from the link table
                 result = db.session.execute(db.select(CustomCountry).filter_by(name=delete_country, user_id=current_user))
                 delete_country_result = result.scalars().first()
                 db.session.execute(db.delete(JourneysCustomCountriesLink).where(JourneysCustomCountriesLink.journey_id == old_journey.id, JourneysCustomCountriesLink.custom_country_id == delete_country_result.id))
-                db.session.commit()
+                # TODO: Entfernen
+                # db.session.commit()
         
         # Add new countries to the link table
         added_countries = current_countries - former_countries
@@ -167,7 +174,8 @@ def update_journey(current_user, journeyId):
                     custom_country_id=custom_country.id
                 )
                 db.session.add(new_link)
-                db.session.commit()
+                # TODO: Entfernen
+                # db.session.commit()
             
         # Update the journey
         db.session.execute(db.update(Journey).where(Journey.id == journeyId).values(
@@ -177,7 +185,8 @@ def update_journey(current_user, journeyId):
             scheduled_end_time=parseDate(journey['scheduled_end_time']['value']),
             countries=journey['countries']['value'],
         ))
-        db.session.commit()
+        # TODO: Entfernen
+        # db.session.commit()
         
         # Update the costs for the journey
         db.session.execute(db.update(Costs).where(Costs.journey_id == journeyId).values(
@@ -231,7 +240,8 @@ def delete_journey(current_user, journeyId):
             
             if custom_country:
                 db.session.execute(db.delete(JourneysCustomCountriesLink).where(JourneysCustomCountriesLink.journey_id == journeyId))
-                db.session.commit()
+                # TODO: Entfernen
+                # db.session.commit()
         
         # Delete the journey from the database
         db.session.delete(journey)

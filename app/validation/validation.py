@@ -5,7 +5,14 @@ from datetime import date, datetime
 class Validation:
   def __init__(self):
     self.error_list = []
-    self.current_date_string = datetime.now().strftime('%Y-%m-%d')
+    # self.current_date_string = datetime.now().strftime('%Y-%m-%d')
+    #  TODO: Prüfen, ob die Änderungen so korrekt sind
+    self.current_date_string = datetime.now().strftime(
+        '%d.%m.%Y'
+    )
+    self.current_date_time_string = datetime.now().strftime(
+        '%d.%m.%Y %H:%M'
+    )
     
   def __return_feedback(self):    
     if len(self.error_list) == 0:
@@ -45,7 +52,9 @@ class Validation:
       self.error_list.append('Required format: DD.MM.YYYY HH:MM')
     else:
       if not min_date_time:
-        min_date_time = self.current_date_string
+        # TODO: Prüfen ob die Änderung funktioniert
+        min_date_time = self.current_date_time_string
+        # min_date_time = self.current_date_string
         
       if datetime.strptime(value, '%d.%m.%Y %H:%M') < datetime.strptime(min_date_time, '%d.%m.%Y %H:%M'):
         self.error_list.append("Can't be earlier than now")
