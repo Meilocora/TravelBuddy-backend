@@ -62,6 +62,7 @@ def add_media(current_user):
             minor_stage_id=mediumData.get('minorStageId', {}).get('value', None),
             place_to_visit_id=mediumData.get('placeToVisitId', {}).get('value', None),
             storage_type=mediumData['storageType'],
+            asset_id=mediumData.get('assetId', {}).get('value', None),
         )
          
         db.session.add(new_medium)
@@ -141,6 +142,7 @@ def update_medium(current_user, mediumId):
             place_to_visit_id=place_id,
             duration=old_medium.duration,
             storage_type=old_medium.storage_type,
+            asset_id=old_medium.asset_id,
         ))
         db.session.commit()
                 

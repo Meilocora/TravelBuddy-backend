@@ -240,6 +240,7 @@ def ownership_data(app):
             duration=None,
             user_id=user_a.id,
             storage_type="local",
+            asset_id="123"
         )
 
         medium_b = Medium(
@@ -254,6 +255,7 @@ def ownership_data(app):
             duration=None,
             user_id=user_b.id,
             storage_type="local",
+            asset_id="125"
         )
 
         db.session.add_all([

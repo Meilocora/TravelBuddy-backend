@@ -299,6 +299,7 @@ class Medium(db.Model):
     description: Mapped[str] = mapped_column(String, nullable=True)
     duration: Mapped[int] = mapped_column(Integer, nullable=True)
     storage_type: Mapped[str] = mapped_column(String, nullable=False)
+    asset_id: Mapped[str] = mapped_column(String, nullable=True)
 
     # Foreign keys to the parents
     user_id: Mapped[int] = mapped_column(Integer, ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
