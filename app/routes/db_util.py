@@ -319,7 +319,7 @@ def adjust_stages_orders(other_stages, new_order, old_order=None):
         # db.session.commit()
         
 def fetch_media(current_user, storage_type):
-    if storage_type != 'local' and storage_type != 'cloud':
+    if storage_type != 'local' and storage_type != 'firebase':
         return None
     try:    
         # Get all the media from the database
