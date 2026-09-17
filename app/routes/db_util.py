@@ -318,10 +318,12 @@ def adjust_stages_orders(other_stages, new_order, old_order=None):
         # TODO: Entfernen
         # db.session.commit()
         
-def fetch_media(current_user):
+def fetch_media(current_user, storage_type):
+    if storage_type != 'local' and storage_type != 'cloud':
+        return None
     try:    
         # Get all the media from the database
-        result = db.session.execute(db.select(Medium).filter_by(user_id=current_user).order_by(Medium.timestamp))
+        result = db.session.execute(db.select(Medium).filter_by(user_id=current_user, storage_type=storage_type).order_by(Medium.timestamp))
         media = result.scalars().all()
                 
         media_list = []
@@ -341,6 +343,7 @@ def fetch_media(current_user):
                 'placeToVisitId': medium.place_to_visit_id,
                 'description': medium.description,
                 'duration': medium.duration,
+                'storageType': medium.storage_type
             }
             
             media_list.append(medium_data)

@@ -9,10 +9,10 @@ from db import db
 
 medium_bp = Blueprint('medium', __name__)
 
-@medium_bp.route('/get-media', methods=['GET'])
+@medium_bp.route('/get-media/<str:storage_type>', methods=['GET'])
 @token_required
-def get_media(current_user):
-    media_list = fetch_media(current_user=current_user)
+def get_media(current_user, storage_type):
+    media_list = fetch_media(current_user=current_user, storage_type=storage_type)
         
     if not isinstance(media_list, Exception):   
         return jsonify({'media': media_list})
@@ -61,6 +61,7 @@ def add_media(current_user):
             user_id=current_user,
             minor_stage_id=mediumData.get('minorStageId', {}).get('value', None),
             place_to_visit_id=mediumData.get('placeToVisitId', {}).get('value', None),
+            storage_type=mediumData['storageType'],
         )
          
         db.session.add(new_medium)
@@ -138,7 +139,8 @@ def update_medium(current_user, mediumId):
             description=mediumData['description']['value'],
             minor_stage_id=minor_stage_id,
             place_to_visit_id=place_id,
-            duration=old_medium.duration
+            duration=old_medium.duration,
+            storage_type=old_medium.storage_type,
         ))
         db.session.commit()
                 

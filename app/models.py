@@ -298,6 +298,7 @@ class Medium(db.Model):
     timestamp: Mapped[DateTime] = mapped_column(DateTime, nullable=False)
     description: Mapped[str] = mapped_column(String, nullable=True)
     duration: Mapped[int] = mapped_column(Integer, nullable=True)
+    storage_type: Mapped[str] = mapped_column(String, nullable=False)
 
     # Foreign keys to the parents
     user_id: Mapped[int] = mapped_column(Integer, ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
