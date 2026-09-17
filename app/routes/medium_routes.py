@@ -9,7 +9,7 @@ from db import db
 
 medium_bp = Blueprint('medium', __name__)
 
-@medium_bp.route('/get-media/<str:storage_type>', methods=['GET'])
+@medium_bp.route('/get-media/<string:storage_type>', methods=['GET'])
 @token_required
 def get_media(current_user, storage_type):
     media_list = fetch_media(current_user=current_user, storage_type=storage_type)
