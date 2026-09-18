@@ -47,9 +47,11 @@ def test_removing_country_only_affects_current_journey(
     major_a = db.session.get(MajorStage, major_a_id)
 
     journey_a.scheduled_start_time = start
-    journey_a.scheduled_end_time = end
+    # journey_a.scheduled_end_time = end  TODO: Delete
+    journey_a.duration_days = (end - start).days if end else None
     major_a.scheduled_start_time = start
-    major_a.scheduled_end_time = end
+    # major_a.scheduled_end_time = end  TODO: Delete
+    major_a.duration_days = (end - start).days if end else None
     major_a.country = "Germany"
     journey_a.countries = "Germany"
 
@@ -58,7 +60,8 @@ def test_removing_country_only_affects_current_journey(
         name="Second Germany Journey",
         description="Must not be modified",
         scheduled_start_time=start,
-        scheduled_end_time=end,
+        scheduled_end_time=None,  
+        duration_days=(end - start).days if end else None,
         countries="Germany",
         user_id=user_id,
     )
@@ -69,7 +72,8 @@ def test_removing_country_only_affects_current_journey(
     other_stage = MajorStage(
         title="Protected Germany Stage",
         scheduled_start_time=start,
-        scheduled_end_time=end,
+        scheduled_end_time=None,
+        duration_days=(end - start).days if end else None,
         additional_info=None,
         country="Germany",
         position=0,
@@ -122,6 +126,7 @@ def test_removing_country_only_affects_current_journey(
         "description": field("Updated"),
         "scheduled_start_time": field("01.10.2027"),
         "scheduled_end_time": field("10.10.2027"),
+        'duration_days': field(10),
         "countries": field("France"),
         "budget": field(1000),
         "spent_money": field(0),
@@ -281,6 +286,7 @@ def test_activity_cannot_be_updated_through_different_minor_stage(
         title="Another User A Stage",
         scheduled_start_time=datetime(2026, 9, 2, 8, 0),
         scheduled_end_time=datetime(2026, 9, 3, 20, 0),
+        duration_days=(datetime(2026, 9, 3, 20, 0) - datetime(2026, 9, 2, 8, 0)).days,
         position=1,
         major_stage_id=major_stage_id,
     )

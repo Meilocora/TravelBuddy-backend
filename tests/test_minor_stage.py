@@ -16,6 +16,7 @@ def _payload(**overrides):
         "scheduled_end_time": (tomorrow + timedelta(days=1)).strftime(
             "%d.%m.%Y"
         ),
+        "duration_days": 1,
         "budget": 400,
         "spent_money": 0,
         "position": 1,
@@ -43,6 +44,7 @@ def _create_update_data():
         description="",
         scheduled_start_time=start,
         scheduled_end_time=end,
+        duration_days=(end - start).days if end else None,
         countries="Germany",
         user=user,
     )
@@ -50,6 +52,7 @@ def _create_update_data():
         title="Germany",
         scheduled_start_time=start,
         scheduled_end_time=end,
+        duration_days=(end - start).days if end else None,
         additional_info=None,
         country="Germany",
         position=1,
@@ -59,6 +62,7 @@ def _create_update_data():
         title="Old stop",
         scheduled_start_time=start,
         scheduled_end_time=end,
+        duration_days=(end - start).days if end else None,
         position=1,
         major_stage=major_stage,
     )

@@ -112,7 +112,8 @@ def ownership_data(app):
             name="Journey User A",
             description="Journey owned by User A",
             scheduled_start_time=start,
-            scheduled_end_time=end,
+            scheduled_end_time=None,
+            duration_days=(end - start).days if end else None,
             countries="Germany",
             user_id=user_a.id,
         )
@@ -121,7 +122,8 @@ def ownership_data(app):
             name="Journey User B",
             description="Journey owned by User B",
             scheduled_start_time=start,
-            scheduled_end_time=end,
+            scheduled_end_time=None,
+            duration_days=(end - start).days if end else None,
             countries="Thailand",
             user_id=user_b.id,
         )
@@ -140,7 +142,8 @@ def ownership_data(app):
         major_a = MajorStage(
             title="Major Stage A",
             scheduled_start_time=start,
-            scheduled_end_time=end,
+            scheduled_end_time=None,
+            duration_days=(end - start).days if end else None,
             additional_info=None,
             country="Germany",
             position=0,
@@ -150,7 +153,8 @@ def ownership_data(app):
         major_b = MajorStage(
             title="Major Stage B",
             scheduled_start_time=start,
-            scheduled_end_time=end,
+            scheduled_end_time=None,
+            duration_days=(end - start).days if end else None,
             additional_info=None,
             country="Thailand",
             position=0,
@@ -171,7 +175,8 @@ def ownership_data(app):
         minor_a = MinorStage(
             title="Minor Stage A",
             scheduled_start_time=start,
-            scheduled_end_time=end,
+            scheduled_end_time=None,
+            duration_days=(end - start).days if end else None,
             position=0,
             major_stage_id=major_a.id,
         )
@@ -179,7 +184,8 @@ def ownership_data(app):
         minor_b = MinorStage(
             title="Minor Stage B",
             scheduled_start_time=start,
-            scheduled_end_time=end,
+            scheduled_end_time=None,
+            duration_days=(end - start).days if end else None,
             position=0,
             major_stage_id=major_b.id,
         )
