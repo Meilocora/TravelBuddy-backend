@@ -68,9 +68,7 @@ def create_major_stage(current_user, journeyId):
             journey_id=journeyId
         )
         db.session.add(new_major_stage)
-        # TODO: Entfernen
-        # db.session.commit()
-         
+        
         # Create a new costs for the major stage
         costs = Costs(
             major_stage_id=new_major_stage.id,
@@ -173,9 +171,7 @@ def update_major_stage(current_user, journeyId, majorStageId):
             country=major_stage['country']['value'],
             position=major_stage['position']['value']
         ))
-        # TODO: Entfernen
-        # db.session.commit()
-        
+       
         # Update the costs for the major stage
         db.session.execute(db.update(Costs).where(Costs.major_stage_id == majorStageId).values(
             budget=major_stage['budget']['value'],

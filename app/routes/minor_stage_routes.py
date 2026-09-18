@@ -78,9 +78,6 @@ def create_minor_stage(current_user, majorStageId):
             major_stage_id=majorStageId
         )
         db.session.add(new_minor_stage)
-        # TODO: Entfernen
-        # db.session.commit()
-        
         
          # Remove line breaks from the name
         clean_place = minor_stage['accommodation_place']['value'].replace('\n', ' ').replace('\r', ' ')
@@ -95,9 +92,7 @@ def create_minor_stage(current_user, majorStageId):
             minor_stage_id=new_minor_stage.id
         )
         db.session.add(new_accommodation)
-        # TODO: Entfernen
-        # db.session.commit()
-                
+       
         # Create a new costs for the minor stage
         costs = Costs(
             minor_stage_id=new_minor_stage.id,
@@ -106,9 +101,7 @@ def create_minor_stage(current_user, majorStageId):
             money_exceeded=False
         )
         db.session.add(costs)
-        # TODO: Entfernen
-        # db.session.commit()
-        
+     
         calculate_journey_costs(journey_costs)
                 
         db.session.commit()
@@ -195,9 +188,7 @@ def update_minor_stage(current_user, majorStageId, minorStageId):
             scheduled_end_time=parseDate(minor_stage['scheduled_end_time']['value']),
             position=minor_stage['position']['value']
         ))
-        # TODO: Entfernen
-        # db.session.commit()
-                
+            
         accommodation = db.session.execute(
             db.select(Accommodation).filter_by(
                 minor_stage_id=minorStageId
@@ -221,18 +212,14 @@ def update_minor_stage(current_user, majorStageId, minorStageId):
             link=minor_stage['accommodation_link']['value'],
             minor_stage_id=minorStageId
         ))
-        # TODO: Entfernen
-        # db.session.commit()
-        
+       
         # Update the costs for the minor stage
         db.session.execute(db.update(Costs).where(Costs.minor_stage_id == minorStageId).values(
             budget=minor_stage['budget']['value'],
             spent_money=minor_stage['spent_money']['value'],
             money_exceeded=money_exceeded,
         ))
-        # TODO: Entfernen
-        # db.session.commit()
-        
+      
         calculate_journey_costs(journey_costs)
         db.session.commit()
         

@@ -24,18 +24,6 @@ class MinorStageValidation(Validation):
         if assigned_title_val and old_minor_stage and minorStage['title']['value'] != old_minor_stage.title:
             minorStage['title']['errors'].append(f", {assigned_title_val}")
             minorStage['title']['isValid'] = False
-
-        # TODO: Das entfernen oder es soll nur eine Warnung geben
-        # for existing_minor_stage in existing_minor_stages:
-        #     start_val = MinorStageValidation().check_for_overlap(minorStage['scheduled_start_time']['value'], existing_minor_stage.scheduled_start_time, existing_minor_stage.scheduled_end_time, existing_minor_stage.title)
-        #     if start_val:   
-        #         minorStage['scheduled_start_time']['errors'].append(f", {start_val}")             
-        #         minorStage['scheduled_start_time']['isValid'] = False
-                
-        #     end_val = MinorStageValidation().check_for_overlap(minorStage['scheduled_end_time']['value'], existing_minor_stage.scheduled_start_time, existing_minor_stage.scheduled_end_time, existing_minor_stage.title)
-        #     if end_val:
-        #         minorStage['scheduled_end_time']['errors'].append(f", {end_val}")
-        #         minorStage['scheduled_end_time']['isValid'] = False
             
         start_val = MinorStageValidation().validate_date(minorStage['scheduled_start_time']['value'])
         if start_val:

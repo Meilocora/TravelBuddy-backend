@@ -315,8 +315,6 @@ def adjust_stages_orders(other_stages, new_order, old_order=None):
         elif old_order > new_order:
             if stage.position < old_order and stage.position >= new_order:
                 stage.position = stage.position + 1
-        # TODO: Entfernen
-        # db.session.commit()
         
 def fetch_media(current_user, storage_type):
     if storage_type != 'local' and storage_type != 'firebase':
@@ -343,7 +341,8 @@ def fetch_media(current_user, storage_type):
                 'placeToVisitId': medium.place_to_visit_id,
                 'description': medium.description,
                 'duration': medium.duration,
-                'storageType': medium.storage_type
+                'storageType': medium.storage_type,
+                'assetId': medium.asset_id
             }
             
             media_list.append(medium_data)

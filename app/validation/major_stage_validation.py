@@ -49,19 +49,6 @@ class MajorStageValidation(Validation):
         if info_val:
             majorStage['additional_info']['errors'].append(f", {title_val}")
             majorStage['additional_info']['isValid'] = False
-        
-        # TODO: Das entfernen oder es soll nur eine Warnung geben
-        # for existing_major_stage in existing_major_stages:
-        #     start_val = MajorStageValidation().check_for_overlap(majorStage['scheduled_start_time']['value'], existing_major_stage.scheduled_start_time, existing_major_stage.scheduled_end_time, existing_major_stage.title)
-        #     if start_val:   
-        #         majorStage['scheduled_start_time']['errors'].append(f", {start_val}")             
-        #         majorStage['scheduled_start_time']['isValid'] = False
-                
-        #     end_val = MajorStageValidation().check_for_overlap(majorStage['scheduled_end_time']['value'], existing_major_stage.scheduled_start_time, existing_major_stage.scheduled_end_time, existing_major_stage.title)
-        #     if end_val:
-        #         majorStage['scheduled_end_time']['errors'].append(f", {end_val}")
-        #         majorStage['scheduled_end_time']['isValid'] = False
-        
           
         start_val = MajorStageValidation().validate_date(majorStage['scheduled_start_time']['value'])
         if start_val:
@@ -129,31 +116,7 @@ class MajorStageValidation(Validation):
         info_val = MajorStageValidation().validate_string(majorStage['additional_info']['value'], min_length=0, max_length=1000)
         if info_val:
             majorStage['additional_info']['errors'].append(f", {title_val}")
-            majorStage['additional_info']['isValid'] = False
-        
-        # TODO: Das entfernen oder es soll nur eine Warnung geben
-        # for existing_major_stage in existing_major_stages:
-        #     start_val = MajorStageValidation().check_for_overlap(majorStage['scheduled_start_time']['value'], existing_major_stage.scheduled_start_time, existing_major_stage.scheduled_end_time, existing_major_stage.title)
-        #     if start_val:   
-        #         majorStage['scheduled_start_time']['errors'].append(f", {start_val}")             
-        #         majorStage['scheduled_start_time']['isValid'] = False
-                
-        #     end_val = MajorStageValidation().check_for_overlap(majorStage['scheduled_end_time']['value'], existing_major_stage.scheduled_start_time, existing_major_stage.scheduled_end_time, existing_major_stage.title)
-        #     if end_val:
-        #         majorStage['scheduled_end_time']['errors'].append(f", {end_val}")
-        #         majorStage['scheduled_end_time']['isValid'] = False
-                
-        # for minor_stage in minor_stages:
-        #     start_val = MajorStageValidation().check_for_inferior_collision(majorStage['scheduled_start_time']['value'], minor_stage.scheduled_start_time, minor_stage.scheduled_end_time, minor_stage.title)
-        #     if start_val:   
-        #         majorStage['scheduled_start_time']['errors'].append(f", {start_val}")             
-        #         majorStage['scheduled_start_time']['isValid'] = False
-                
-        #     end_val = MajorStageValidation().check_for_inferior_collision(majorStage['scheduled_end_time']['value'], minor_stage.scheduled_start_time, minor_stage.scheduled_end_time, minor_stage.title)
-        #     if end_val:
-        #         majorStage['scheduled_end_time']['errors'].append(f", {end_val}")
-        #         majorStage['scheduled_end_time']['isValid'] = False
-            
+            majorStage['additional_info']['isValid'] = False            
             
         start_val = MajorStageValidation().validate_date(majorStage['scheduled_start_time']['value'])
         if start_val:

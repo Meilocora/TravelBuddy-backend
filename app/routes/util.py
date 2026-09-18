@@ -57,8 +57,6 @@ def calculate_minor_stage_costs(minor_stage_costs):
   
     minor_stage_costs.spent_money = spent_money
     minor_stage_costs.money_exceeded = minor_stage_costs.spent_money > minor_stage_costs.budget
-    # TODO: Entfernen
-    # db.session.commit()
     return minor_stage_costs
 
 def calculate_major_stage_costs(major_stage_costs):
@@ -80,8 +78,6 @@ def calculate_major_stage_costs(major_stage_costs):
   
     major_stage_costs.spent_money = spent_money
     major_stage_costs.money_exceeded = major_stage_costs.spent_money > major_stage_costs.budget
-    # TODO: Entfernen
-    # db.session.commit()
     return major_stage_costs
     
 
@@ -96,8 +92,6 @@ def calculate_journey_costs(journey_costs):
   
     journey_costs.spent_money = spent_money
     journey_costs.money_exceeded = journey_costs.spent_money > journey_costs.budget
-     # TODO: Entfernen
-    # return db.session.commit()
     return
 
 tf = TimezoneFinder()
