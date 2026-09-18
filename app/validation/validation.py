@@ -138,26 +138,57 @@ class Validation:
     return self.__return_feedback()
   
   def validate_duration_days(self, duration_days: int):
-      try:
+    try:
         duration_days = int(duration_days)
-      except ValueError:
-        self.error_list.append('Invalid duration days format')
+    except (TypeError, ValueError):
+        self.error_list.append(
+            'Invalid duration days format'
+        )
         return self.__return_feedback()
-       
-      if duration_days < 0:
-        self.error_list.append('Duration days cannot be negative')
-      
+
+    if duration_days < 1:
+        self.error_list.append(
+            'Duration days must be at least 1'
+        )
+
+    return self.__return_feedback()
+
+
+  def validate_stage_duration(
+      self,
+      superior_duration: int,
+      inferior_durations: list
+  ):
+      try:
+          superior_duration = int(superior_duration)
+
+          inferior_duration_sum = sum(
+              int(duration)
+              for duration in inferior_durations
+          )
+
+      except (TypeError, ValueError):
+          self.error_list.append(
+              'Invalid stage duration format'
+          )
+          return self.__return_feedback()
+
+      if superior_duration < inferior_duration_sum:
+          self.error_list.append(
+              'Superior stage duration exceeded by '
+              'inferior stage durations'
+          )
+
       return self.__return_feedback()
-  
-  
+    
   def validate_email(self, email:str):
     regex = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,7}\b'
     if(not re.fullmatch(regex, email)):
         self.error_list.append("Invalid Email")
     
     return self.__return_feedback()
-  
-  
+
+
   def validate_password(self, password:str, min_length:int = 6, max_length:int = 20):
     if len(password) < min_length:
       self.error_list.append(f'Min length is {min_length}')
@@ -178,30 +209,30 @@ class Validation:
       self.error_list.append("Must contain one special character")
     
     return self.__return_feedback()
-  
-  
+
+
   def validate_hyperlink(self, hyperlink:str):
     regex = r'(http|https)://[a-zA-Z0-9\-.]+\.[a-zA-Z]{2,}(\/\S*)?'
     if(not re.fullmatch(regex, hyperlink)):
         self.error_list.append("Invalid Hyperlink")
     
     return self.__return_feedback()
-  
-  
+
+
   def validate_spendings_category(self, category:str):
     if category not in ['Transportation', 'Acommodation', 'Activities', 'Dine out', 'Basic needs', 'Souvenirs', 'Other']:
       self.error_list.append('Invalid category')
     
     return self.__return_feedback()
-  
-  
+
+
   def validate_transportation_type(self, type:str):
     if type not in ['Bus', 'Car', 'Boat', 'Plane', 'Train', 'Other']:
       self.error_list.append('Invalid transportation type')      
     
     return self.__return_feedback()
-  
-  
+
+
   def validate_coordinates(self, latitude:str, longitude:str):
     try:
         float(latitude['value'])

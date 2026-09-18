@@ -11,7 +11,7 @@ class JourneyValidation(Validation):
         errors = False
       
         for key, value in journey.items():
-            if key != 'description':
+            if key != 'description' and key != 'scheduled_end_time':
                 if value['value'] == "" or value['value'] == None:
                     value['errors'].append('Input is required')
                     journey[key]['isValid'] = False
@@ -36,28 +36,7 @@ class JourneyValidation(Validation):
             start_val = JourneyValidation().check_for_overlap(journey['scheduled_start_time']['value'], existing_journey.scheduled_start_time, existing_journey.scheduled_end_time, existing_journey.name)
             if start_val:   
                 journey['scheduled_start_time']['errors'].append(f", {start_val}")             
-                journey['scheduled_start_time']['isValid'] = False
-                
-            end_val = JourneyValidation().check_for_overlap(journey['scheduled_end_time']['value'], existing_journey.scheduled_start_time, existing_journey.scheduled_end_time, existing_journey.name)
-            if end_val:
-                journey['scheduled_end_time']['errors'].append(f", {end_val}")
-                journey['scheduled_end_time']['isValid'] = False
-                
-        start_val = JourneyValidation().validate_date(journey['scheduled_start_time']['value'])
-        if start_val:
-            journey['scheduled_start_time']['errors'].append(f", {start_val}")
-            journey['scheduled_start_time']['isValid'] = False
-        
-        end_val = JourneyValidation().validate_date(journey['scheduled_end_time']['value'])
-        if end_val:
-            journey['scheduled_end_time']['errors'].append(f", {end_val}")
-            journey['scheduled_end_time']['isValid'] = False
-          
-        # TODO: Delete?  
-        # start_end_val = JourneyValidation().compare_dates(journey['scheduled_start_time']['value'], journey['scheduled_end_time']['value'])
-        # if start_end_val:
-        #     journey['scheduled_start_time']['errors'].append(f", {start_end_val}")
-        #     journey['scheduled_start_time']['isValid'] = False
+                journey['scheduled_start_time']['isValid'] = False                
             
         money_val = JourneyValidation().validate_amount(journey['budget']['value'])
         if money_val:
@@ -68,7 +47,6 @@ class JourneyValidation(Validation):
         if duration_days_val:
             journey['duration_days']['errors'].append(f", {duration_days_val}")
             journey['duration_days']['isValid'] = False
-            
             
         for key, value in journey.items():
             if value.get('errors'):
@@ -84,7 +62,7 @@ class JourneyValidation(Validation):
           errors = False
         
           for key, value in journey.items():
-            if key != 'description':
+            if key != 'description'  and key != 'scheduled_end_time':
                 if value['value'] == "" or value['value'] == None:
                     value['errors'].append('Input is required')
                     journey[key]['isValid'] = False
@@ -110,40 +88,11 @@ class JourneyValidation(Validation):
             if start_val:   
                 journey['scheduled_start_time']['errors'].append(f", {start_val}")             
                 journey['scheduled_start_time']['isValid'] = False
-                
-            end_val = JourneyValidation().check_for_overlap(journey['scheduled_end_time']['value'], existing_journey.scheduled_start_time, existing_journey.scheduled_end_time, existing_journey.name)
-            if end_val:
-                journey['scheduled_end_time']['errors'].append(f", {end_val}")
-                journey['scheduled_end_time']['isValid'] = False
-
-        # TODO: This still needed? Maybe just check if the majorStages durations fit into Journey
-        #   for major_stage in major_stages:
-        #     start_val = JourneyValidation().check_for_inferior_collision(journey['scheduled_start_time']['value'], major_stage.scheduled_start_time, major_stage.scheduled_end_time, major_stage.title)
-        #     if start_val:   
-        #         journey['scheduled_start_time']['errors'].append(f", {start_val}")             
-        #         journey['scheduled_start_time']['isValid'] = False
-
-        #     end_val = JourneyValidation().check_for_inferior_collision(journey['scheduled_end_time']['value'], major_stage.scheduled_start_time, major_stage.scheduled_end_time, major_stage.title)
-        #     if end_val:
-        #         journey['scheduled_end_time']['errors'].append(f", {end_val}")
-        #         journey['scheduled_end_time']['isValid'] = False
-
 
           start_val = JourneyValidation().validate_date(journey['scheduled_start_time']['value'])
           if start_val:
               journey['scheduled_start_time']['errors'].append(f", {start_val}")
               journey['scheduled_start_time']['isValid'] = False
-            
-          end_val = JourneyValidation().validate_date(journey['scheduled_end_time']['value'])
-          if end_val:
-              journey['scheduled_end_time']['errors'].append(f", {end_val}")
-              journey['scheduled_end_time']['isValid'] = False
-            
-        # TODO: Delete?!    
-        #   start_end_val = JourneyValidation().compare_dates(journey['scheduled_start_time']['value'], journey['scheduled_end_time']['value'])
-        #   if start_end_val:
-        #       journey['scheduled_start_time']['errors'].append(f", {start_end_val}")
-        #       journey['scheduled_start_time']['isValid'] = False
                 
           money_val = JourneyValidation().validate_amount(journey['budget']['value'])
           if money_val:
@@ -155,6 +104,10 @@ class JourneyValidation(Validation):
               journey['duration_days']['errors'].append(f", {duration_days_val}")
               journey['duration_days']['isValid'] = False
                 
+          stage_duration_val = JourneyValidation().validate_stage_duration(journey['duration_days']['value'], [major_stage.duration_days for major_stage in major_stages])
+          if stage_duration_val:
+               journey['duration_days']['errors'].append(f", {stage_duration_val}")
+               journey['duration_days']['isValid'] = False
                 
           for key, value in journey.items():
               if value.get('errors'):

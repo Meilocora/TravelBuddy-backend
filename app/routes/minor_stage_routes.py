@@ -59,7 +59,7 @@ def create_minor_stage(current_user, majorStageId):
         db.session.rollback()
         return jsonify({'error': 'Internal server error'}), 500 
     
-    response, isValid = MinorStageValidation.validate_minor_stage(minor_stage, existing_minor_stages, existing_minor_stages_costs, major_stage_costs, assigned_titles)  
+    response, isValid = MinorStageValidation.validate_minor_stage(minor_stage, existing_minor_stages, existing_minor_stages_costs, major_stage_costs, assigned_titles, major_stage)  
     
     if not isValid:
         return jsonify({'minorStageFormValues': response}), 400
@@ -72,8 +72,6 @@ def create_minor_stage(current_user, majorStageId):
         # Create a new minor stage
         new_minor_stage = MinorStage(
             title=minor_stage['title']['value'],
-            # scheduled_start_time=parseDate(minor_stage['scheduled_start_time']['value']),
-            # scheduled_end_time=parseDate(minor_stage['scheduled_end_time']['value']),
             duration_days=minor_stage['duration_days']['value'],
             position=minor_stage['position']['value'],
             major_stage_id=majorStageId
@@ -156,6 +154,7 @@ def update_minor_stage(current_user, majorStageId, minorStageId):
                 
         minor_stage = request.get_json()
         result = db.session.execute(db.select(MinorStage).filter(MinorStage.id!=minorStageId, MinorStage.major_stage_id==majorStageId))
+        major_stage = db.session.execute(db.select(MajorStage).filter_by(id=majorStageId)).scalars().first()
         existing_minor_stages = result.scalars().all()
         assigned_titles = get_users_stages_titles(current_user)
         
@@ -172,7 +171,7 @@ def update_minor_stage(current_user, majorStageId, minorStageId):
         db.session.rollback()
         return jsonify({'error': 'Internal server error'}), 500 
     
-    response, isValid = MinorStageValidation.validate_minor_stage(minor_stage, existing_minor_stages, existing_minor_stages_costs, major_stage_costs, assigned_titles, old_minor_stage)
+    response, isValid = MinorStageValidation.validate_minor_stage(minor_stage, existing_minor_stages, existing_minor_stages_costs, major_stage_costs, assigned_titles, major_stage, old_minor_stage)
 
     if not isValid:
         return jsonify({'minorStageFormValues': response}), 400

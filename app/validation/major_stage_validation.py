@@ -24,11 +24,11 @@ class MajorStageValidation(Validation):
     
   
   @staticmethod
-  def validate_major_stage(majorStage, existing_major_stages, existing_major_stages_costs, journey_costs, assigned_titles):
+  def validate_major_stage(majorStage, existing_major_stages, existing_major_stages_costs, journey_costs, assigned_titles, journey):
         errors = False
       
         for key, value in majorStage.items():
-            if key != 'additional_info':
+            if key != 'additional_info' and key != 'scheduled_start_time' and key != 'scheduled_end_time':
                 if value['value'] == "" or value['value'] == None:
                     value['errors'].append('Input is required')
                     majorStage[key]['isValid'] = False
@@ -47,30 +47,19 @@ class MajorStageValidation(Validation):
 
         info_val = MajorStageValidation().validate_string(majorStage['additional_info']['value'], min_length=0, max_length=1000)
         if info_val:
-            majorStage['additional_info']['errors'].append(f", {title_val}")
+            majorStage['additional_info']['errors'].append(f", {info_val}")
             majorStage['additional_info']['isValid'] = False
-          
-        start_val = MajorStageValidation().validate_date(majorStage['scheduled_start_time']['value'])
-        if start_val:
-            majorStage['scheduled_start_time']['errors'].append(f", {start_val}")
-            majorStage['scheduled_start_time']['isValid'] = False
-        
-        end_val = MajorStageValidation().validate_date(majorStage['scheduled_end_time']['value'])
-        if end_val:
-            majorStage['scheduled_end_time']['errors'].append(f", {end_val}")
-            majorStage['scheduled_end_time']['isValid'] = False
             
         duration_days_val = MajorStageValidation().validate_duration_days(majorStage['duration_days']['value'])
         if duration_days_val:
             majorStage['duration_days']['errors'].append(f", {duration_days_val}")
             majorStage['duration_days']['isValid'] = False
           
-        # TODO: Delete?  
-        # start_end_val = MajorStageValidation().compare_dates(majorStage['scheduled_start_time']['value'], majorStage['scheduled_end_time']['value'])
-        # if start_end_val:
-        #     majorStage['scheduled_start_time']['errors'].append(f", {start_end_val}")
-        #     majorStage['scheduled_start_time']['isValid'] = False
-            
+        stage_duration_val = MajorStageValidation().validate_stage_duration(journey.duration_days, [major_stage.duration_days for major_stage in existing_major_stages] + [majorStage['duration_days']['value']])
+        if stage_duration_val:
+            majorStage['duration_days']['errors'].append(f", {stage_duration_val}")
+            majorStage['duration_days']['isValid'] = False
+
         money_val = MajorStageValidation().validate_amount(majorStage['budget']['value'])
         if money_val:
             majorStage['budget']['errors'].append(f", {money_val}")
@@ -98,11 +87,11 @@ class MajorStageValidation(Validation):
      
   
   @staticmethod
-  def validate_major_stage_update(majorStage, existing_major_stages, existing_major_stages_costs, journey_costs, minor_stages, assigned_titles, old_major_stage):
+  def validate_major_stage_update(majorStage, existing_major_stages, existing_major_stages_costs, journey_costs, minor_stages, assigned_titles, old_major_stage, journey):
         errors = False
       
         for key, value in majorStage.items():
-            if key != 'additional_info':
+            if key != 'additional_info' and key != 'scheduled_start_time' and key != 'scheduled_end_time':
                 if value['value'] == "" or value['value'] == None:
                     value['errors'].append('Input is required')
                     majorStage[key]['isValid'] = False
@@ -123,28 +112,22 @@ class MajorStageValidation(Validation):
         if info_val:
             majorStage['additional_info']['errors'].append(f", {title_val}")
             majorStage['additional_info']['isValid'] = False            
-            
-        start_val = MajorStageValidation().validate_date(majorStage['scheduled_start_time']['value'])
-        if start_val:
-            majorStage['scheduled_start_time']['errors'].append(f", {start_val}")
-            majorStage['scheduled_start_time']['isValid'] = False
-        
-        end_val = MajorStageValidation().validate_date(majorStage['scheduled_end_time']['value'])
-        if end_val:
-            majorStage['scheduled_end_time']['errors'].append(f", {end_val}")
-            majorStage['scheduled_end_time']['isValid'] = False
-          
+                      
         duration_days_val = MajorStageValidation().validate_duration_days(majorStage['duration_days']['value'])
         if duration_days_val:
             majorStage['duration_days']['errors'].append(f", {duration_days_val}")
             majorStage['duration_days']['isValid'] = False
-        
-        # TODO: Delete?  
-        # start_end_val = MajorStageValidation().compare_dates(majorStage['scheduled_start_time']['value'], majorStage['scheduled_end_time']['value'])
-        # if start_end_val:
-        #     majorStage['scheduled_start_time']['errors'].append(f", {start_end_val}")
-        #     majorStage['scheduled_start_time']['isValid'] = False
             
+        stage_duration_val = MajorStageValidation().validate_stage_duration(journey.duration_days, [major_stage.duration_days for major_stage in existing_major_stages] + [majorStage['duration_days']['value']])
+        if stage_duration_val:
+            majorStage['duration_days']['errors'].append(f", {stage_duration_val}")
+            majorStage['duration_days']['isValid'] = False
+                    
+        minor_duration_val = MajorStageValidation().validate_stage_duration(majorStage['duration_days']['value'],[minor_stage.duration_days for minor_stage in minor_stages])
+        if minor_duration_val:
+            majorStage['duration_days']['errors'].append(f", {minor_duration_val}")
+            majorStage['duration_days']['isValid'] = False
+                    
         money_val = MajorStageValidation().validate_amount(majorStage['budget']['value'])
         if money_val:
             majorStage['budget']['errors'].append(f", {money_val}")

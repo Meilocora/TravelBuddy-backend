@@ -48,7 +48,7 @@ def create_major_stage(current_user, journeyId):
             "error": "Internal server error"
         }), 500
     
-    response, isValid = MajorStageValidation.validate_major_stage(major_stage, existing_major_stages, existing_major_stages_costs, journey_costs, assigned_titles)
+    response, isValid = MajorStageValidation.validate_major_stage(major_stage, existing_major_stages, existing_major_stages_costs, journey_costs, assigned_titles, journey)
     
     if not isValid:
         return jsonify({'majorStageFormValues': response}), 400
@@ -61,8 +61,6 @@ def create_major_stage(current_user, journeyId):
         # Create a new major stage
         new_major_stage = MajorStage(
             title=major_stage['title']['value'],
-            # scheduled_start_time="",  
-            # scheduled_end_time="",
             duration_days=major_stage['duration_days']['value'],
             additional_info=major_stage['additional_info']['value'],
             country=major_stage['country']['value'],
@@ -137,6 +135,7 @@ def update_major_stage(current_user, journeyId, majorStageId):
             existing_major_stages_costs.append(db.session.execute(db.select(Costs).filter_by(major_stage_id=stage.id)).scalars().first())
     
         journey_costs = db.session.execute(db.select(Costs).filter_by(journey_id=journeyId)).scalars().first()
+        journey = db.session.execute(db.select(Journey).filter_by(id=journeyId)).scalars().first()
         
     except Exception:
         db.session.rollback()
@@ -145,7 +144,7 @@ def update_major_stage(current_user, journeyId, majorStageId):
         }), 500
     
     
-    response, isValid = MajorStageValidation.validate_major_stage_update(major_stage, existing_major_stages, existing_major_stages_costs, journey_costs, minor_stages, assigned_titles, old_major_stage)
+    response, isValid = MajorStageValidation.validate_major_stage_update(major_stage, existing_major_stages, existing_major_stages_costs, journey_costs, minor_stages, assigned_titles, old_major_stage, journey)
     
     if not isValid:
         return jsonify({'majorStageFormValues': response}), 400
@@ -155,7 +154,6 @@ def update_major_stage(current_user, journeyId, majorStageId):
         if old_major_stage.minor_stages:
             for minor_stage in old_major_stage.minor_stages:
                 db.session.delete(minor_stage)
-            db.session.commit()
 
     money_exceeded = float(response['budget']['value']) < float(response['spent_money']['value'])
 
@@ -265,9 +263,19 @@ def delete_major_stage(current_user, majorStageId):
 @major_stage_bp.route('/swap-major-stages', methods=['POST'])
 @token_required
 def swap_major_stages(current_user):
-
+    
     data = request.get_json()
     positions = data.get('stagesPositionList', [])
+    
+    journey_ids = {
+        stage.journey_id
+        for stage in owned_stages
+    }
+
+    if len(journey_ids) != 1:
+        return jsonify({
+            'error': 'Stages belong to different journeys'
+        }), 400
 
     stage_ids = [
         int(item['id'])
@@ -297,7 +305,7 @@ def swap_major_stages(current_user):
         )
 
     db.session.flush()
-    
+        
     journey = db.session.execute(db.select(Journey).filter_by(id=owned_stages[0].journey_id)).scalars().first()
     recalculate_major_stage_dates(journey)
     db.session.commit()

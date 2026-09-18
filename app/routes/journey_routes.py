@@ -46,7 +46,7 @@ def create_journey(current_user):
     if not isValid:
         return jsonify({'journeyFormValues': response}), 200
     
-    calculated_end_time = parseDate(journey['scheduled_start_time']['value']) + timedelta(days=journey['duration_days']['value'])
+    calculated_end_time = parseDate(journey['scheduled_start_time']['value']) + timedelta(days=journey['duration_days']['value']) - 1
     
     try:
         # Create a new journey
@@ -60,6 +60,7 @@ def create_journey(current_user):
             user_id=current_user
         )         
         db.session.add(new_journey)
+        db.session.flush()
          
         # Create a new costs for the journey
         costs = Costs(
@@ -129,7 +130,6 @@ def update_journey(current_user, journeyId):
             "error": "Internal server error"
         }), 500
     
-    # TODO: What happens, when new journey is shorter, than majorStages combined?
     response, isValid = JourneyValidation.validate_journey_update(journey, existing_journeys, major_stages, assigned_titles, old_journey)
         
     if not isValid:
@@ -170,14 +170,16 @@ def update_journey(current_user, journeyId):
                 db.session.add(new_link)
             
         # Update the journey
-        db.session.execute(db.update(Journey).where(Journey.id == journeyId).values(
-            name=journey['name']['value'],
-            description=journey['description']['value'],
-            scheduled_start_time=parseDate(journey['scheduled_start_time']['value']),
-            scheduled_end_time=parseDate(journey['scheduled_start_time']['value']) + timedelta(days=journey['duration_days']['value']),
-            duration_days=journey['duration_days']['value'],
-            countries=journey['countries']['value'],
-        ))
+        old_journey.name = journey['name']['value']
+        old_journey.description = journey['description']['value']
+        old_journey.scheduled_start_time = parseDate(journey['scheduled_start_time']['value'])
+        old_journey.scheduled_end_time = parseDate(journey['scheduled_start_time']['value']) + timedelta(days=journey['duration_days']['value']) - 1
+        old_journey.duration_days = journey['duration_days']['value']
+        old_journey.countries = journey['countries']['value']
+        
+        db.session.flush()
+
+        recalculate_major_stage_dates(old_journey)
         
         # Update the costs for the journey
         db.session.execute(db.update(Costs).where(Costs.journey_id == journeyId).values(
