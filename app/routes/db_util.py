@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 from app.models import (
     Accommodation,
     Activity,
@@ -315,6 +317,56 @@ def adjust_stages_orders(other_stages, new_order, old_order=None):
         elif old_order > new_order:
             if stage.position < old_order and stage.position >= new_order:
                 stage.position = stage.position + 1
+      
+def recalculate_major_stage_dates(journey):
+    """
+    Recalculates the scheduled dates of all major stages and
+    their minor stages. Does not commit.
+    """
+    
+    major_stages = db.session.execute(
+        db.select(MajorStage)
+        .where(MajorStage.journey_id == journey.id)
+        .order_by(MajorStage.position)
+    ).scalars().all()
+
+    current_start = journey.scheduled_start_time
+
+    for major_stage in major_stages:
+        duration = int(major_stage.duration_days)
+
+        major_stage.scheduled_start_time = current_start
+        major_stage.scheduled_end_time = (
+            current_start + timedelta(days=duration - 1)
+        )
+
+        recalculate_minor_stage_dates(major_stage)
+
+        current_start = (
+            major_stage.scheduled_end_time + timedelta(days=1)
+        )
+
+
+def recalculate_minor_stage_dates(major_stage):
+    minor_stages = db.session.execute(
+            db.select(MinorStage)
+            .where(MinorStage.major_stage_id == major_stage.id)
+            .order_by(MinorStage.position)
+        ).scalars().all()
+
+    current_start = major_stage.scheduled_start_time
+
+    for minor_stage in minor_stages:
+        duration = int(minor_stage.duration_days)
+
+        minor_stage.scheduled_start_time = current_start
+        minor_stage.scheduled_end_time = (
+            current_start + timedelta(days=duration - 1)
+        )
+
+        current_start = (
+            minor_stage.scheduled_end_time + timedelta(days=1)
+        )
         
 def fetch_media(current_user, storage_type):
     if storage_type != 'local' and storage_type != 'firebase':

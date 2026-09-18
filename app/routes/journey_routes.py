@@ -1,4 +1,5 @@
 from flask import Blueprint, jsonify, request
+from datetime import timedelta
 
 from app.models import (
     Costs,
@@ -8,7 +9,7 @@ from app.models import (
     MajorStage,
     Spendings,
 )
-from app.routes.db_util import fetch_journeys
+from app.routes.db_util import fetch_journeys, recalculate_major_stage_dates
 from app.routes.resource_access import get_user_journey
 from app.routes.route_protection import token_required
 from app.routes.util import formatDateToString, get_users_stages_titles, parseDate
@@ -45,6 +46,7 @@ def create_journey(current_user):
     if not isValid:
         return jsonify({'journeyFormValues': response}), 200
     
+    calculated_end_time = parseDate(journey['scheduled_start_time']['value']) + timedelta(days=journey['duration_days']['value'])
     
     try:
         # Create a new journey
@@ -52,11 +54,11 @@ def create_journey(current_user):
             name=journey['name']['value'],
             description=journey['description']['value'],
             scheduled_start_time=parseDate(journey['scheduled_start_time']['value']),
-            scheduled_end_time=parseDate(journey['scheduled_end_time']['value']),
+            scheduled_end_time=calculated_end_time,
+            duration_days=journey['duration_days']['value'],
             countries=journey['countries']['value'],
             user_id=current_user
-        )
-         
+        )         
         db.session.add(new_journey)
          
         # Create a new costs for the journey
@@ -95,6 +97,7 @@ def create_journey(current_user):
                 },
                 'scheduled_start_time': formatDateToString(new_journey.scheduled_start_time),
                 'scheduled_end_time': formatDateToString(new_journey.scheduled_end_time),
+                'duration_days': new_journey.duration_days,
                 'countries': new_journey.countries,
                 'majorStagesIds': []}
         
@@ -126,6 +129,7 @@ def update_journey(current_user, journeyId):
             "error": "Internal server error"
         }), 500
     
+    # TODO: What happens, when new journey is shorter, than majorStages combined?
     response, isValid = JourneyValidation.validate_journey_update(journey, existing_journeys, major_stages, assigned_titles, old_journey)
         
     if not isValid:
@@ -170,7 +174,8 @@ def update_journey(current_user, journeyId):
             name=journey['name']['value'],
             description=journey['description']['value'],
             scheduled_start_time=parseDate(journey['scheduled_start_time']['value']),
-            scheduled_end_time=parseDate(journey['scheduled_end_time']['value']),
+            scheduled_end_time=parseDate(journey['scheduled_start_time']['value']) + timedelta(days=journey['duration_days']['value']),
+            duration_days=journey['duration_days']['value'],
             countries=journey['countries']['value'],
         ))
         
@@ -193,7 +198,8 @@ def update_journey(current_user, journeyId):
                     'money_exceeded': money_exceeded,
                 },
                 'scheduled_start_time': journey['scheduled_start_time']['value'],
-                'scheduled_end_time': journey['scheduled_end_time']['value'],
+                'scheduled_end_time': (parseDate(journey['scheduled_start_time']['value']) + timedelta(days=journey['duration_days']['value'])),
+                'duration_days': journey['duration_days']['value'],
                 'countries': journey['countries']['value'],
                 'majorStagesIds': majorStagesIds}
         

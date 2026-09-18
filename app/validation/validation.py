@@ -137,6 +137,18 @@ class Validation:
     
     return self.__return_feedback()
   
+  def validate_duration_days(self, duration_days: int):
+      try:
+        duration_days = int(duration_days)
+      except ValueError:
+        self.error_list.append('Invalid duration days format')
+        return self.__return_feedback()
+       
+      if duration_days < 0:
+        self.error_list.append('Duration days cannot be negative')
+      
+      return self.__return_feedback()
+  
   
   def validate_email(self, email:str):
     regex = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,7}\b'

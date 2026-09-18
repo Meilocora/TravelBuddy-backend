@@ -34,11 +34,17 @@ class MinorStageValidation(Validation):
         if end_val:
             minorStage['scheduled_end_time']['errors'].append(f", {end_val}")
             minorStage['scheduled_end_time']['isValid'] = False
-            
-        start_end_val = MinorStageValidation().compare_dates(minorStage['scheduled_start_time']['value'], minorStage['scheduled_end_time']['value'])
-        if start_end_val:
-            minorStage['scheduled_start_time']['errors'].append(f", {start_end_val}")
-            minorStage['scheduled_start_time']['isValid'] = False
+          
+        duration_days_val = MinorStageValidation().validate_duration_days(minorStage['duration_days']['value'])
+        if duration_days_val:
+            minorStage['duration_days']['errors'].append(f", {duration_days_val}")
+            minorStage['duration_days']['isValid'] = False  
+        
+        # TODO: Delete?  
+        # start_end_val = MinorStageValidation().compare_dates(minorStage['scheduled_start_time']['value'], minorStage['scheduled_end_time']['value'])
+        # if start_end_val:
+        #     minorStage['scheduled_start_time']['errors'].append(f", {start_end_val}")
+        #     minorStage['scheduled_start_time']['isValid'] = False
         
         if minorStage['accommodation_place']['value'] != "":        
             acc_place_val = MinorStageValidation().validate_string(minorStage['accommodation_place']['value'], max_length=50)

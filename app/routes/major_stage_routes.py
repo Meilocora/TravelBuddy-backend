@@ -1,7 +1,8 @@
 from flask import Blueprint, jsonify, request
+from datetime import timedelta
 
 from app.models import Costs, Journey, MajorStage, MinorStage, Spendings, Transportation
-from app.routes.db_util import adjust_stages_orders
+from app.routes.db_util import adjust_stages_orders, recalculate_major_stage_dates
 from app.routes.resource_access import (
     get_user_journey,
     get_user_major_stage,
@@ -60,14 +61,21 @@ def create_major_stage(current_user, journeyId):
         # Create a new major stage
         new_major_stage = MajorStage(
             title=major_stage['title']['value'],
-            scheduled_start_time=parseDate(major_stage['scheduled_start_time']['value']),
-            scheduled_end_time=parseDate(major_stage['scheduled_end_time']['value']),
+            # scheduled_start_time="",  
+            # scheduled_end_time="",
+            duration_days=major_stage['duration_days']['value'],
             additional_info=major_stage['additional_info']['value'],
             country=major_stage['country']['value'],
             position=major_stage['position']['value'],
             journey_id=journeyId
         )
+        journey.major_stages.append(new_major_stage)
         db.session.add(new_major_stage)
+        
+        recalculate_major_stage_dates(journey)
+        
+        # Send the new major stage to the database but do not commit yet
+        db.session.flush()          
         
         # Create a new costs for the major stage
         costs = Costs(
@@ -84,6 +92,7 @@ def create_major_stage(current_user, journeyId):
                                 'title': new_major_stage.title,
                                 'scheduled_start_time': formatDateToString(new_major_stage.scheduled_start_time),
                                 'scheduled_end_time': formatDateToString(new_major_stage.scheduled_end_time),
+                                'duration_days': new_major_stage.duration_days,
                                 'additional_info': new_major_stage.additional_info,
                                 'country': new_major_stage.country,
                                 'position': new_major_stage.position,
@@ -161,16 +170,16 @@ def update_major_stage(current_user, journeyId, majorStageId):
         # Adjust orders of existing major stages if necessary     
         adjust_stages_orders(existing_major_stages, major_stage['position']['value'], old_major_stage.position)
 
-            
-        # Update the major_stage
-        db.session.execute(db.update(MajorStage).where(MajorStage.id == majorStageId).values(
-            title=major_stage['title']['value'],
-            scheduled_start_time=parseDate(major_stage['scheduled_start_time']['value']),
-            scheduled_end_time=parseDate(major_stage['scheduled_end_time']['value']),
-            additional_info=major_stage['additional_info']['value'],
-            country=major_stage['country']['value'],
-            position=major_stage['position']['value']
-        ))
+        old_major_stage.title = major_stage['title']['value']
+        old_major_stage.duration_days = major_stage['duration_days']['value']
+        old_major_stage.additional_info = major_stage['additional_info']['value']
+        old_major_stage.country = major_stage['country']['value']
+        old_major_stage.position = major_stage['position']['value']
+        db.session.flush()
+        
+        # Recalculate the dates for all major stages in the journey after adding the new one
+        journey = db.session.execute(db.select(Journey).filter_by(id=old_major_stage.journey_id)).scalars().first()
+        recalculate_major_stage_dates(journey)
        
         # Update the costs for the major stage
         db.session.execute(db.update(Costs).where(Costs.major_stage_id == majorStageId).values(
@@ -179,11 +188,12 @@ def update_major_stage(current_user, journeyId, majorStageId):
             money_exceeded=money_exceeded
         ))
         db.session.commit()
-        
+                
         response_major_stage = {'id': majorStageId,
                                 'title': major_stage['title']['value'],
-                                'scheduled_start_time': major_stage['scheduled_start_time']['value'],
-                                'scheduled_end_time': major_stage['scheduled_end_time']['value'],
+                                'scheduled_start_time': formatDateToString(old_major_stage.scheduled_start_time),
+                                'scheduled_end_time': formatDateToString(old_major_stage.scheduled_end_time),
+                                'duration_days': major_stage['duration_days']['value'],
                                 'additional_info': major_stage['additional_info']['value'],
                                 'country': major_stage['country']['value'],
                                 'position': major_stage['position']['value'],
@@ -236,9 +246,13 @@ def delete_major_stage(current_user, majorStageId):
             adjust_stages_orders(later_major_stages, 999, major_stage.position)
             
         db.session.delete(major_stage)
-        db.session.commit()
         
+        db.session.flush()
+        
+        recalculate_major_stage_dates(journey)
         calculate_journey_costs(journey_costs)
+        
+        db.session.commit()
         
         return jsonify({'status': 200})
     except Exception:
@@ -282,6 +296,10 @@ def swap_major_stages(current_user):
             .values(position=item['position'])
         )
 
+    db.session.flush()
+    
+    journey = db.session.execute(db.select(Journey).filter_by(id=owned_stages[0].journey_id)).scalars().first()
+    recalculate_major_stage_dates(journey)
     db.session.commit()
 
     return jsonify({'status': 200})

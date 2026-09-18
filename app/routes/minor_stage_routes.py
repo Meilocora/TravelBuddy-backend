@@ -9,7 +9,7 @@ from app.models import (
     Spendings,
     Transportation,
 )
-from app.routes.db_util import adjust_stages_orders
+from app.routes.db_util import adjust_stages_orders, recalculate_minor_stage_dates
 from app.routes.resource_access import (
     get_user_major_stage,
     get_user_minor_stage,
@@ -72,12 +72,19 @@ def create_minor_stage(current_user, majorStageId):
         # Create a new minor stage
         new_minor_stage = MinorStage(
             title=minor_stage['title']['value'],
-            scheduled_start_time=parseDate(minor_stage['scheduled_start_time']['value']),
-            scheduled_end_time=parseDate(minor_stage['scheduled_end_time']['value']),
+            # scheduled_start_time=parseDate(minor_stage['scheduled_start_time']['value']),
+            # scheduled_end_time=parseDate(minor_stage['scheduled_end_time']['value']),
+            duration_days=minor_stage['duration_days']['value'],
             position=minor_stage['position']['value'],
             major_stage_id=majorStageId
         )
+        major_stage.minor_stages.append(new_minor_stage)
         db.session.add(new_minor_stage)
+        
+        recalculate_minor_stage_dates(major_stage)
+        
+        # Send the new major stage to the database but do not commit yet
+        db.session.flush()
         
          # Remove line breaks from the name
         clean_place = minor_stage['accommodation_place']['value'].replace('\n', ' ').replace('\r', ' ')
@@ -111,6 +118,7 @@ def create_minor_stage(current_user, majorStageId):
                                 'title': new_minor_stage.title,
                                 'scheduled_start_time': formatDateToString(new_minor_stage.scheduled_start_time),
                                 'scheduled_end_time': formatDateToString(new_minor_stage.scheduled_end_time),
+                                'duration_days': new_minor_stage.duration_days,
                                 'position': new_minor_stage.position,
                                 'costs': {
                                     'budget': costs.budget,
@@ -181,13 +189,10 @@ def update_minor_stage(current_user, majorStageId, minorStageId):
         # Adjust orders of existing minor stages if necessary
         adjust_stages_orders(existing_minor_stages, minor_stage['position']['value'], old_minor_stage.position)
 
-        # Update the minor stage
-        db.session.execute(db.update(MinorStage).where(MinorStage.id == minorStageId).values(
-            title=minor_stage['title']['value'],
-            scheduled_start_time=parseDate(minor_stage['scheduled_start_time']['value']),
-            scheduled_end_time=parseDate(minor_stage['scheduled_end_time']['value']),
-            position=minor_stage['position']['value']
-        ))
+        old_minor_stage.title = minor_stage['title']['value']
+        old_minor_stage.duration_days = minor_stage['duration_days']['value']
+        old_minor_stage.position = minor_stage['position']['value']
+        db.session.flush()
             
         accommodation = db.session.execute(
             db.select(Accommodation).filter_by(
@@ -212,6 +217,9 @@ def update_minor_stage(current_user, majorStageId, minorStageId):
             link=minor_stage['accommodation_link']['value'],
             minor_stage_id=minorStageId
         ))
+        
+        major_stage = db.session.execute(db.select(MajorStage).filter_by(id=old_minor_stage.major_stage_id)).scalars().first()
+        recalculate_minor_stage_dates(major_stage)
        
         # Update the costs for the minor stage
         db.session.execute(db.update(Costs).where(Costs.minor_stage_id == minorStageId).values(
@@ -226,8 +234,9 @@ def update_minor_stage(current_user, majorStageId, minorStageId):
         # build response minor stage object for the frontend
         response_minor_stage = {'id': minorStageId,
                                 'title': minor_stage['title']['value'],
-                                'scheduled_start_time': minor_stage['scheduled_start_time']['value'],
-                                'scheduled_end_time': minor_stage['scheduled_end_time']['value'],
+                                'scheduled_start_time': formatDateToString(old_minor_stage.scheduled_start_time),
+                                'scheduled_end_time': formatDateToString(old_minor_stage.scheduled_end_time),
+                                'duration_days': minor_stage['duration_days']['value'],
                                 'position': minor_stage['position']['value'],
                                 'costs': {
                                     'budget': minor_stage['budget']['value'],
@@ -297,9 +306,13 @@ def delete_minor_stage(current_user, minorStageId):
             adjust_stages_orders(later_minor_stages, 999, minor_stage.position)
 
         db.session.delete(minor_stage)
-        db.session.commit()
         
+        db.session.flush()
+                
+        recalculate_minor_stage_dates(major_stage)
         calculate_journey_costs(journey_costs)
+                
+        db.session.commit()
         
         return jsonify({'status': 200})
     except Exception:
@@ -356,7 +369,11 @@ def swap_minor_stages(current_user):
                     position=item["position"]
                 )
             )
+        
+        db.session.flush()
 
+        major_stage = db.session.execute(db.select(MajorStage).filter_by(id=owned_stages[0].major_stage_id)).scalars().first()
+        recalculate_minor_stage_dates(major_stage)
         db.session.commit()
 
         return jsonify({"status": 200}), 200

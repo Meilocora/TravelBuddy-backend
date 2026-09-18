@@ -110,6 +110,7 @@ def create_app(config=None):
 
     return app
 
+# TODO: What happens, when majorStages are too big for journey? Warning or Error?
 
 if __name__ == "__main__":
     app = create_app()

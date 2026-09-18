@@ -52,16 +52,22 @@ class JourneyValidation(Validation):
         if end_val:
             journey['scheduled_end_time']['errors'].append(f", {end_val}")
             journey['scheduled_end_time']['isValid'] = False
-            
-        start_end_val = JourneyValidation().compare_dates(journey['scheduled_start_time']['value'], journey['scheduled_end_time']['value'])
-        if start_end_val:
-            journey['scheduled_start_time']['errors'].append(f", {start_end_val}")
-            journey['scheduled_start_time']['isValid'] = False
+          
+        # TODO: Delete?  
+        # start_end_val = JourneyValidation().compare_dates(journey['scheduled_start_time']['value'], journey['scheduled_end_time']['value'])
+        # if start_end_val:
+        #     journey['scheduled_start_time']['errors'].append(f", {start_end_val}")
+        #     journey['scheduled_start_time']['isValid'] = False
             
         money_val = JourneyValidation().validate_amount(journey['budget']['value'])
         if money_val:
             journey['budget']['errors'].append(f", {money_val}")
             journey['budget']['isValid'] = False
+
+        duration_days_val = JourneyValidation().validate_duration_days(journey['duration_days']['value'])
+        if duration_days_val:
+            journey['duration_days']['errors'].append(f", {duration_days_val}")
+            journey['duration_days']['isValid'] = False
             
             
         for key, value in journey.items():
@@ -110,17 +116,17 @@ class JourneyValidation(Validation):
                 journey['scheduled_end_time']['errors'].append(f", {end_val}")
                 journey['scheduled_end_time']['isValid'] = False
 
+        # TODO: This still needed? Maybe just check if the majorStages durations fit into Journey
+        #   for major_stage in major_stages:
+        #     start_val = JourneyValidation().check_for_inferior_collision(journey['scheduled_start_time']['value'], major_stage.scheduled_start_time, major_stage.scheduled_end_time, major_stage.title)
+        #     if start_val:   
+        #         journey['scheduled_start_time']['errors'].append(f", {start_val}")             
+        #         journey['scheduled_start_time']['isValid'] = False
 
-          for major_stage in major_stages:
-            start_val = JourneyValidation().check_for_inferior_collision(journey['scheduled_start_time']['value'], major_stage.scheduled_start_time, major_stage.scheduled_end_time, major_stage.title)
-            if start_val:   
-                journey['scheduled_start_time']['errors'].append(f", {start_val}")             
-                journey['scheduled_start_time']['isValid'] = False
-
-            end_val = JourneyValidation().check_for_inferior_collision(journey['scheduled_end_time']['value'], major_stage.scheduled_start_time, major_stage.scheduled_end_time, major_stage.title)
-            if end_val:
-                journey['scheduled_end_time']['errors'].append(f", {end_val}")
-                journey['scheduled_end_time']['isValid'] = False
+        #     end_val = JourneyValidation().check_for_inferior_collision(journey['scheduled_end_time']['value'], major_stage.scheduled_start_time, major_stage.scheduled_end_time, major_stage.title)
+        #     if end_val:
+        #         journey['scheduled_end_time']['errors'].append(f", {end_val}")
+        #         journey['scheduled_end_time']['isValid'] = False
 
 
           start_val = JourneyValidation().validate_date(journey['scheduled_start_time']['value'])
@@ -132,16 +138,22 @@ class JourneyValidation(Validation):
           if end_val:
               journey['scheduled_end_time']['errors'].append(f", {end_val}")
               journey['scheduled_end_time']['isValid'] = False
-                
-          start_end_val = JourneyValidation().compare_dates(journey['scheduled_start_time']['value'], journey['scheduled_end_time']['value'])
-          if start_end_val:
-              journey['scheduled_start_time']['errors'].append(f", {start_end_val}")
-              journey['scheduled_start_time']['isValid'] = False
+            
+        # TODO: Delete?!    
+        #   start_end_val = JourneyValidation().compare_dates(journey['scheduled_start_time']['value'], journey['scheduled_end_time']['value'])
+        #   if start_end_val:
+        #       journey['scheduled_start_time']['errors'].append(f", {start_end_val}")
+        #       journey['scheduled_start_time']['isValid'] = False
                 
           money_val = JourneyValidation().validate_amount(journey['budget']['value'])
           if money_val:
               journey['budget']['errors'].append(f", {money_val}")
               journey['budget']['isValid'] = False
+                
+          duration_days_val = JourneyValidation().validate_duration_days(journey['duration_days']['value'])
+          if duration_days_val:
+              journey['duration_days']['errors'].append(f", {duration_days_val}")
+              journey['duration_days']['isValid'] = False
                 
                 
           for key, value in journey.items():

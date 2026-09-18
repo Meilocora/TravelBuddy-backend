@@ -28,7 +28,8 @@ class Journey(db.Model):
     name: Mapped[str] = mapped_column(String, unique=True, nullable=False)
     description: Mapped[str] = mapped_column(String, nullable=True)
     scheduled_start_time: Mapped[DateTime] = mapped_column(DateTime, nullable=False)
-    scheduled_end_time: Mapped[DateTime] = mapped_column(DateTime, nullable=False)
+    scheduled_end_time: Mapped[DateTime] = mapped_column(DateTime, nullable=True)
+    duration_days: Mapped[int] = mapped_column(Integer, nullable=False)
     countries: Mapped[str] = mapped_column(String, nullable=False)
 
     # Define relationships to children
@@ -97,8 +98,9 @@ class MajorStage(db.Model):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     title: Mapped[str] = mapped_column(String, nullable=False)
-    scheduled_start_time: Mapped[DateTime] = mapped_column(DateTime, nullable=False)
-    scheduled_end_time: Mapped[DateTime] = mapped_column(DateTime, nullable=False)
+    scheduled_start_time: Mapped[DateTime] = mapped_column(DateTime, nullable=True)
+    scheduled_end_time: Mapped[DateTime] = mapped_column(DateTime, nullable=True)
+    duration_days: Mapped[int] = mapped_column(Integer, nullable=False)     
     additional_info: Mapped[str] = mapped_column(String, nullable=True)
     country: Mapped[str] = mapped_column(String, nullable=False)
     position: Mapped[int] = mapped_column(Integer, nullable=False)
@@ -120,8 +122,9 @@ class MinorStage(db.Model):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     title: Mapped[str] = mapped_column(String(40), nullable=False)
-    scheduled_start_time: Mapped[DateTime] = mapped_column(DateTime, nullable=False)
-    scheduled_end_time: Mapped[DateTime] = mapped_column(DateTime, nullable=False)
+    scheduled_start_time: Mapped[DateTime] = mapped_column(DateTime, nullable=True)
+    scheduled_end_time: Mapped[DateTime] = mapped_column(DateTime, nullable=True)
+    duration_days: Mapped[int] = mapped_column(Integer, nullable=False)
     position: Mapped[int] = mapped_column(Integer, nullable=False)
 
     # Define relationships to children
