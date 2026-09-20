@@ -63,6 +63,8 @@ def create_minor_stage(current_user, majorStageId):
     
     if not isValid:
         return jsonify({'minorStageFormValues': response}), 400
+
+    duration_days = int(minor_stage['duration_days']['value'])
     
     try:
          # Adjust orders of existing major stages if necessary
@@ -72,7 +74,7 @@ def create_minor_stage(current_user, majorStageId):
         # Create a new minor stage
         new_minor_stage = MinorStage(
             title=minor_stage['title']['value'],
-            duration_days=minor_stage['duration_days']['value'],
+            duration_days=duration_days,
             position=minor_stage['position']['value'],
             major_stage_id=majorStageId
         )
@@ -176,6 +178,8 @@ def update_minor_stage(current_user, majorStageId, minorStageId):
     if not isValid:
         return jsonify({'minorStageFormValues': response}), 400
 
+    duration_days = int(minor_stage['duration_days']['value'])
+
     money_exceeded = float(response['budget']['value']) < float(response['spent_money']['value'])
 
     spendings = db.session.execute(db.select(Spendings).join(Costs).filter(Costs.minor_stage_id == minorStageId)).scalars().all()
@@ -189,7 +193,7 @@ def update_minor_stage(current_user, majorStageId, minorStageId):
         adjust_stages_orders(existing_minor_stages, minor_stage['position']['value'], old_minor_stage.position)
 
         old_minor_stage.title = minor_stage['title']['value']
-        old_minor_stage.duration_days = minor_stage['duration_days']['value']
+        old_minor_stage.duration_days = duration_days
         old_minor_stage.position = minor_stage['position']['value']
         db.session.flush()
             
@@ -235,7 +239,7 @@ def update_minor_stage(current_user, majorStageId, minorStageId):
                                 'title': minor_stage['title']['value'],
                                 'scheduled_start_time': formatDateToString(old_minor_stage.scheduled_start_time),
                                 'scheduled_end_time': formatDateToString(old_minor_stage.scheduled_end_time),
-                                'duration_days': minor_stage['duration_days']['value'],
+                                'duration_days': duration_days,
                                 'position': minor_stage['position']['value'],
                                 'costs': {
                                     'budget': minor_stage['budget']['value'],

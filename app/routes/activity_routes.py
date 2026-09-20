@@ -95,7 +95,8 @@ def update_activity(current_user, minorStageId, activityId):
             }), 404
             
         new_activity = request.get_json()
-        major_stage = db.get_or_404(MajorStage, old_activity.major_stage_id)
+        minor_stage = db.get_or_404(MinorStage, old_activity.minor_stage_id)
+        major_stage = db.get_or_404(MajorStage, minor_stage.major_stage_id)
         journey = db.get_or_404(Journey, major_stage.journey_id)
         journey_costs = db.session.execute(db.select(Costs).filter_by(journey_id=journey.id)).scalars().first()
          

@@ -26,15 +26,18 @@ class MinorStageValidation(Validation):
             minorStage['title']['errors'].append(f", {assigned_title_val}")
             minorStage['title']['isValid'] = False
                       
-        duration_days_val = MinorStageValidation().validate_duration_days(minorStage['duration_days']['value'])
+        duration_days_raw = minorStage['duration_days']['value']
+        duration_days_val = MinorStageValidation().validate_duration_days(duration_days_raw)
         if duration_days_val:
             minorStage['duration_days']['errors'].append(f", {duration_days_val}")
             minorStage['duration_days']['isValid'] = False  
-            
-        stage_duration_val = MinorStageValidation().validate_stage_duration(major_stage.duration_days, [minor_stage.duration_days for minor_stage in existing_minor_stages] + [minorStage['duration_days']['value']])
-        if stage_duration_val:
-            minorStage['duration_days']['errors'].append(f", {stage_duration_val}")
-            minorStage['duration_days']['isValid'] = False
+
+        if not duration_days_val:
+            duration_days = int(duration_days_raw)
+            stage_duration_val = MinorStageValidation().validate_stage_duration(major_stage.duration_days, [minor_stage.duration_days for minor_stage in existing_minor_stages] + [duration_days])
+            if stage_duration_val:
+                minorStage['duration_days']['errors'].append(f", {stage_duration_val}")
+                minorStage['duration_days']['isValid'] = False
                 
         if minorStage['accommodation_place']['value'] != "":        
             acc_place_val = MinorStageValidation().validate_string(minorStage['accommodation_place']['value'], max_length=50)

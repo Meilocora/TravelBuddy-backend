@@ -45,8 +45,10 @@ def create_journey(current_user):
 
     if not isValid:
         return jsonify({'journeyFormValues': response}), 200
+
+    duration_days = int(journey['duration_days']['value'])
     
-    calculated_end_time = parseDate(journey['scheduled_start_time']['value']) + timedelta(days=journey['duration_days']['value']) - 1
+    calculated_end_time = parseDate(journey['scheduled_start_time']['value']) + timedelta(days=duration_days) - timedelta(days=1)
     
     try:
         # Create a new journey
@@ -55,7 +57,7 @@ def create_journey(current_user):
             description=journey['description']['value'],
             scheduled_start_time=parseDate(journey['scheduled_start_time']['value']),
             scheduled_end_time=calculated_end_time,
-            duration_days=journey['duration_days']['value'],
+            duration_days=duration_days,
             countries=journey['countries']['value'],
             user_id=current_user
         )         
@@ -135,6 +137,8 @@ def update_journey(current_user, journeyId):
     if not isValid:
         return jsonify({'journeyFormValues': response}), 200
 
+    duration_days = int(journey['duration_days']['value'])
+
     money_exceeded = float(response['budget']['value']) < float(response['spent_money']['value'])
 
     majorStages_result = db.session.execute(db.select(MajorStage).filter_by(journey_id=journeyId))
@@ -173,8 +177,8 @@ def update_journey(current_user, journeyId):
         old_journey.name = journey['name']['value']
         old_journey.description = journey['description']['value']
         old_journey.scheduled_start_time = parseDate(journey['scheduled_start_time']['value'])
-        old_journey.scheduled_end_time = parseDate(journey['scheduled_start_time']['value']) + timedelta(days=journey['duration_days']['value']) - 1
-        old_journey.duration_days = journey['duration_days']['value']
+        old_journey.scheduled_end_time = parseDate(journey['scheduled_start_time']['value']) + timedelta(days=duration_days) - timedelta(days=1)
+        old_journey.duration_days = duration_days
         old_journey.countries = journey['countries']['value']
         
         db.session.flush()
@@ -200,8 +204,8 @@ def update_journey(current_user, journeyId):
                     'money_exceeded': money_exceeded,
                 },
                 'scheduled_start_time': journey['scheduled_start_time']['value'],
-                'scheduled_end_time': (parseDate(journey['scheduled_start_time']['value']) + timedelta(days=journey['duration_days']['value'])),
-                'duration_days': journey['duration_days']['value'],
+                'scheduled_end_time': (parseDate(journey['scheduled_start_time']['value']) + timedelta(days=duration_days)),
+                'duration_days': duration_days,
                 'countries': journey['countries']['value'],
                 'majorStagesIds': majorStagesIds}
         

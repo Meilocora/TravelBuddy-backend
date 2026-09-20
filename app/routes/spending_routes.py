@@ -76,14 +76,18 @@ def update_spending(current_user, minorStageId, spendingId):
         old_spending = get_user_spending(
             current_user,
             spendingId,
-            minor_stage_id=minorStageId,
         )
         
         if old_spending is None:
             return jsonify({'error': 'Resource not found'}), 404
                 
         new_spending = request.get_json()
-        major_stage = db.get_or_404(MajorStage, old_spending.major_stage_id)
+        costs = db.get_or_404(Costs, old_spending.costs_id)
+        if costs.minor_stage_id != minorStageId:
+            return jsonify({'error': 'Resource not found'}), 404
+
+        minor_stage = db.get_or_404(MinorStage, costs.minor_stage_id)
+        major_stage = db.get_or_404(MajorStage, minor_stage.major_stage_id)
         journey = db.get_or_404(Journey, major_stage.journey_id)
         journey_costs = db.session.execute(db.select(Costs).filter_by(journey_id=journey.id)).scalars().first()
          

@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify, request
 
-from app.models import Costs, Journey, MajorStage, Transportation
+from app.models import Costs, Journey, MajorStage, MinorStage, Transportation
 from app.routes.resource_access import (
     get_user_major_stage,
     get_user_minor_stage,
@@ -227,7 +227,6 @@ def update_minor_stage_transportation(current_user, minorStageId, transportation
         old_transportation = get_user_transportation(
             current_user,
             transportationId,
-            minor_stage_id=minorStageId,
         )
         
         if old_transportation is None:
@@ -235,7 +234,8 @@ def update_minor_stage_transportation(current_user, minorStageId, transportation
         
         
         new_transportation = request.get_json()
-        major_stage = db.get_or_404(MajorStage, old_transportation.major_stage_id)
+        minor_stage = db.get_or_404(MinorStage, old_transportation.minor_stage_id)
+        major_stage = db.get_or_404(MajorStage, minor_stage.major_stage_id)
         journey = db.get_or_404(Journey, major_stage.journey_id)
         journey_costs = db.session.execute(db.select(Costs).filter_by(journey_id=journey.id)).scalars().first()
          

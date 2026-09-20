@@ -7,10 +7,16 @@ import pytest
 import app.models
 from app.models import (
     Activity,
+    Costs,
+    Currency,
+    CustomCountry,
     Journey,
     MajorStage,
     Medium,
     MinorStage,
+    PlaceToVisit,
+    Spendings,
+    Transportation,
     User,
 )
 from db import db
@@ -289,4 +295,204 @@ def ownership_data(app):
 
             "medium_a_id": medium_a.id,
             "medium_b_id": medium_b.id,
+        }
+
+
+@pytest.fixture()
+def field():
+    def _make(value):
+        return {
+            "value": value,
+            "errors": [],
+            "isValid": True,
+        }
+
+    return _make
+
+
+@pytest.fixture()
+def route_graph_data(app):
+    with app.app_context():
+        start = datetime(2026, 9, 1, 8, 0)
+        end = datetime(2026, 9, 10, 20, 0)
+
+        user = User(
+            username="routes_user",
+            email="routes_user@example.com",
+            password="StrongPwd1!",
+        )
+        db.session.add(user)
+        db.session.flush()
+
+        journey = Journey(
+            name="Routes Journey",
+            description="Route tests",
+            scheduled_start_time=start,
+            scheduled_end_time=end,
+            duration_days=9,
+            countries="Germany, France",
+            user_id=user.id,
+        )
+        db.session.add(journey)
+        db.session.flush()
+
+        journey_costs = Costs(
+            journey_id=journey.id,
+            budget=5000,
+            spent_money=0,
+            money_exceeded=False,
+        )
+        db.session.add(journey_costs)
+
+        major_stage = MajorStage(
+            title="Germany",
+            scheduled_start_time=start,
+            scheduled_end_time=end,
+            duration_days=9,
+            additional_info="",
+            country="Germany",
+            position=1,
+            journey_id=journey.id,
+        )
+        db.session.add(major_stage)
+        db.session.flush()
+
+        major_costs = Costs(
+            major_stage_id=major_stage.id,
+            budget=2000,
+            spent_money=0,
+            money_exceeded=False,
+        )
+        db.session.add(major_costs)
+
+        minor_stage = MinorStage(
+            title="Berlin",
+            scheduled_start_time=start,
+            scheduled_end_time=end,
+            duration_days=3,
+            position=1,
+            major_stage_id=major_stage.id,
+        )
+        db.session.add(minor_stage)
+        db.session.flush()
+
+        minor_costs = Costs(
+            minor_stage_id=minor_stage.id,
+            budget=700,
+            spent_money=0,
+            money_exceeded=False,
+        )
+        db.session.add(minor_costs)
+
+        custom_country = CustomCountry(
+            name="Germany",
+            currencies="EUR",
+            languages="German",
+            capital="Berlin",
+            population=100,
+            region="Europe",
+            subregion="Western Europe",
+            wiki_link="https://example.com",
+            visited=False,
+            visum_regulations=None,
+            best_time_to_visit=None,
+            general_information=None,
+            user_id=user.id,
+        )
+        db.session.add(custom_country)
+        db.session.flush()
+
+        place = PlaceToVisit(
+            name="Brandenburg Gate",
+            description="Landmark",
+            visited=False,
+            favorite=False,
+            latitude=52.5,
+            longitude=13.4,
+            link="",
+            user_id=user.id,
+            custom_country_id=custom_country.id,
+        )
+        db.session.add(place)
+        db.session.flush()
+
+        activity = Activity(
+            name="Museum",
+            description="Visit",
+            costs=20,
+            booked=False,
+            place="Berlin",
+            latitude=None,
+            longitude=None,
+            link="",
+            minor_stage_id=minor_stage.id,
+        )
+        db.session.add(activity)
+
+        spending = Spendings(
+            name="Lunch",
+            amount=15,
+            date=start,
+            category="Dine out",
+            costs_id=minor_costs.id,
+        )
+        db.session.add(spending)
+
+        transportation_major = Transportation(
+            type="Train",
+            start_time=start,
+            arrival_time=start + timedelta(hours=2),
+            place_of_departure="A",
+            departure_latitude=None,
+            departure_longitude=None,
+            place_of_arrival="B",
+            arrival_latitude=None,
+            arrival_longitude=None,
+            transportation_costs=100,
+            link="",
+            major_stage_id=major_stage.id,
+        )
+        db.session.add(transportation_major)
+
+        medium = Medium(
+            medium_type="image",
+            url="https://example.com/img.jpg",
+            thumbnail_url=None,
+            favorite=False,
+            latitude=None,
+            longitude=None,
+            timestamp=start,
+            description="desc",
+            duration=None,
+            user_id=user.id,
+            storage_type="local",
+            asset_id="asset-1",
+            minor_stage_id=minor_stage.id,
+            place_to_visit_id=place.id,
+        )
+        db.session.add(medium)
+
+        currency = Currency(
+            code="EUR",
+            name="Euro",
+            symbol="€",
+            conversion_rate=1.0,
+            user_id=user.id,
+        )
+        db.session.add(currency)
+
+        db.session.commit()
+
+        return {
+            "user_id": user.id,
+            "journey_id": journey.id,
+            "major_stage_id": major_stage.id,
+            "minor_stage_id": minor_stage.id,
+            "custom_country_id": custom_country.id,
+            "place_id": place.id,
+            "activity_id": activity.id,
+            "spending_id": spending.id,
+            "medium_id": medium.id,
+            "transportation_major_id": transportation_major.id,
+            "currency_id": currency.id,
         }

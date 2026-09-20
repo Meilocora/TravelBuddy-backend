@@ -52,6 +52,8 @@ def create_major_stage(current_user, journeyId):
     
     if not isValid:
         return jsonify({'majorStageFormValues': response}), 400
+
+    duration_days = int(major_stage['duration_days']['value'])
     
     try:
         # Adjust orders of existing major stages if necessary
@@ -61,7 +63,7 @@ def create_major_stage(current_user, journeyId):
         # Create a new major stage
         new_major_stage = MajorStage(
             title=major_stage['title']['value'],
-            duration_days=major_stage['duration_days']['value'],
+            duration_days=duration_days,
             additional_info=major_stage['additional_info']['value'],
             country=major_stage['country']['value'],
             position=major_stage['position']['value'],
@@ -148,6 +150,8 @@ def update_major_stage(current_user, journeyId, majorStageId):
     
     if not isValid:
         return jsonify({'majorStageFormValues': response}), 400
+
+    duration_days = int(major_stage['duration_days']['value'])
     
     # Delete Minor Stages if Country is changed
     if response['country']['value'] != old_major_stage.country:
@@ -169,7 +173,7 @@ def update_major_stage(current_user, journeyId, majorStageId):
         adjust_stages_orders(existing_major_stages, major_stage['position']['value'], old_major_stage.position)
 
         old_major_stage.title = major_stage['title']['value']
-        old_major_stage.duration_days = major_stage['duration_days']['value']
+        old_major_stage.duration_days = duration_days
         old_major_stage.additional_info = major_stage['additional_info']['value']
         old_major_stage.country = major_stage['country']['value']
         old_major_stage.position = major_stage['position']['value']
@@ -191,7 +195,7 @@ def update_major_stage(current_user, journeyId, majorStageId):
                                 'title': major_stage['title']['value'],
                                 'scheduled_start_time': formatDateToString(old_major_stage.scheduled_start_time),
                                 'scheduled_end_time': formatDateToString(old_major_stage.scheduled_end_time),
-                                'duration_days': major_stage['duration_days']['value'],
+                                'duration_days': duration_days,
                                 'additional_info': major_stage['additional_info']['value'],
                                 'country': major_stage['country']['value'],
                                 'position': major_stage['position']['value'],
@@ -266,16 +270,6 @@ def swap_major_stages(current_user):
     
     data = request.get_json()
     positions = data.get('stagesPositionList', [])
-    
-    journey_ids = {
-        stage.journey_id
-        for stage in owned_stages
-    }
-
-    if len(journey_ids) != 1:
-        return jsonify({
-            'error': 'Stages belong to different journeys'
-        }), 400
 
     stage_ids = [
         int(item['id'])
@@ -296,6 +290,16 @@ def swap_major_stages(current_user):
         return jsonify({
             'error': 'One or more stages not found'
         }), 404
+
+    journey_ids = {
+        stage.journey_id
+        for stage in owned_stages
+    }
+
+    if len(journey_ids) != 1:
+        return jsonify({
+            'error': 'Stages belong to different journeys'
+        }), 400
 
     for item in positions:
         db.session.execute(

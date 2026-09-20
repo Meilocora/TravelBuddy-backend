@@ -43,7 +43,8 @@ class JourneyValidation(Validation):
             journey['budget']['errors'].append(f", {money_val}")
             journey['budget']['isValid'] = False
 
-        duration_days_val = JourneyValidation().validate_duration_days(journey['duration_days']['value'])
+        duration_days_raw = journey['duration_days']['value']
+        duration_days_val = JourneyValidation().validate_duration_days(duration_days_raw)
         if duration_days_val:
             journey['duration_days']['errors'].append(f", {duration_days_val}")
             journey['duration_days']['isValid'] = False
@@ -99,15 +100,18 @@ class JourneyValidation(Validation):
               journey['budget']['errors'].append(f", {money_val}")
               journey['budget']['isValid'] = False
                 
-          duration_days_val = JourneyValidation().validate_duration_days(journey['duration_days']['value'])
+          duration_days_raw = journey['duration_days']['value']
+          duration_days_val = JourneyValidation().validate_duration_days(duration_days_raw)
           if duration_days_val:
               journey['duration_days']['errors'].append(f", {duration_days_val}")
               journey['duration_days']['isValid'] = False
-                
-          stage_duration_val = JourneyValidation().validate_stage_duration(journey['duration_days']['value'], [major_stage.duration_days for major_stage in major_stages])
-          if stage_duration_val:
-               journey['duration_days']['errors'].append(f", {stage_duration_val}")
-               journey['duration_days']['isValid'] = False
+
+          if not duration_days_val:
+              duration_days = int(duration_days_raw)
+              stage_duration_val = JourneyValidation().validate_stage_duration(duration_days, [major_stage.duration_days for major_stage in major_stages])
+              if stage_duration_val:
+                   journey['duration_days']['errors'].append(f", {stage_duration_val}")
+                   journey['duration_days']['isValid'] = False
                 
           for key, value in journey.items():
               if value.get('errors'):

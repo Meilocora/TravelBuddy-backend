@@ -50,15 +50,18 @@ class MajorStageValidation(Validation):
             majorStage['additional_info']['errors'].append(f", {info_val}")
             majorStage['additional_info']['isValid'] = False
             
-        duration_days_val = MajorStageValidation().validate_duration_days(majorStage['duration_days']['value'])
+        duration_days_raw = majorStage['duration_days']['value']
+        duration_days_val = MajorStageValidation().validate_duration_days(duration_days_raw)
         if duration_days_val:
             majorStage['duration_days']['errors'].append(f", {duration_days_val}")
             majorStage['duration_days']['isValid'] = False
-          
-        stage_duration_val = MajorStageValidation().validate_stage_duration(journey.duration_days, [major_stage.duration_days for major_stage in existing_major_stages] + [majorStage['duration_days']['value']])
-        if stage_duration_val:
-            majorStage['duration_days']['errors'].append(f", {stage_duration_val}")
-            majorStage['duration_days']['isValid'] = False
+
+        if not duration_days_val:
+            duration_days = int(duration_days_raw)
+            stage_duration_val = MajorStageValidation().validate_stage_duration(journey.duration_days, [major_stage.duration_days for major_stage in existing_major_stages] + [duration_days])
+            if stage_duration_val:
+                majorStage['duration_days']['errors'].append(f", {stage_duration_val}")
+                majorStage['duration_days']['isValid'] = False
 
         money_val = MajorStageValidation().validate_amount(majorStage['budget']['value'])
         if money_val:
@@ -113,20 +116,23 @@ class MajorStageValidation(Validation):
             majorStage['additional_info']['errors'].append(f", {title_val}")
             majorStage['additional_info']['isValid'] = False            
                       
-        duration_days_val = MajorStageValidation().validate_duration_days(majorStage['duration_days']['value'])
+        duration_days_raw = majorStage['duration_days']['value']
+        duration_days_val = MajorStageValidation().validate_duration_days(duration_days_raw)
         if duration_days_val:
             majorStage['duration_days']['errors'].append(f", {duration_days_val}")
             majorStage['duration_days']['isValid'] = False
-            
-        stage_duration_val = MajorStageValidation().validate_stage_duration(journey.duration_days, [major_stage.duration_days for major_stage in existing_major_stages] + [majorStage['duration_days']['value']])
-        if stage_duration_val:
-            majorStage['duration_days']['errors'].append(f", {stage_duration_val}")
-            majorStage['duration_days']['isValid'] = False
-                    
-        minor_duration_val = MajorStageValidation().validate_stage_duration(majorStage['duration_days']['value'],[minor_stage.duration_days for minor_stage in minor_stages])
-        if minor_duration_val:
-            majorStage['duration_days']['errors'].append(f", {minor_duration_val}")
-            majorStage['duration_days']['isValid'] = False
+
+        if not duration_days_val:
+            duration_days = int(duration_days_raw)
+            stage_duration_val = MajorStageValidation().validate_stage_duration(journey.duration_days, [major_stage.duration_days for major_stage in existing_major_stages] + [duration_days])
+            if stage_duration_val:
+                majorStage['duration_days']['errors'].append(f", {stage_duration_val}")
+                majorStage['duration_days']['isValid'] = False
+
+            minor_duration_val = MajorStageValidation().validate_stage_duration(duration_days, [minor_stage.duration_days for minor_stage in minor_stages])
+            if minor_duration_val:
+                majorStage['duration_days']['errors'].append(f", {minor_duration_val}")
+                majorStage['duration_days']['isValid'] = False
                     
         money_val = MajorStageValidation().validate_amount(majorStage['budget']['value'])
         if money_val:
