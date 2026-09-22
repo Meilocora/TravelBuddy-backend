@@ -116,7 +116,7 @@ def test_create_journey_validation_fail(client, auth_header, route_graph_data, m
         json=payload,
         headers=auth_header(route_graph_data["user_id"]),
     )
-    assert response.status_code == 200
+    assert response.status_code == 400
 
 
 def test_update_journey_not_found(client, auth_header, route_graph_data, monkeypatch):

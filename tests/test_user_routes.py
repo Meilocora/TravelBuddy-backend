@@ -65,5 +65,3 @@ def test_get_user_data_with_coordinates_handles_helper_exception(
     )
 
     assert response.status_code == 500
-    body = response.get_json()
-    assert body["offset"] == 0

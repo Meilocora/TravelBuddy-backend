@@ -110,7 +110,7 @@ def create_app(config=None):
 
     return app
 
-# TODO: Get rid of unused validations for routes
+# TODO: Extend tests to validations
 
 if __name__ == "__main__":
     app = create_app()

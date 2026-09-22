@@ -34,7 +34,7 @@ def create_activity(current_user, minorStageId):
         return jsonify({'error': 'Unknown error'}), 400 
     
     response, isValid = ActivityValidation.validate_activity(activity)
-    
+        
     if not isValid:
         return jsonify({'activityFormValues': response}), 400
     
@@ -71,7 +71,7 @@ def create_activity(current_user, minorStageId):
     except Exception:
         db.session.rollback()
         current_app.logger.exception(
-            "Failed to update activity"
+            "Failed to create activity"
         )
 
         return jsonify({

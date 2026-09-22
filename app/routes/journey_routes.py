@@ -44,7 +44,7 @@ def create_journey(current_user):
     response, isValid = JourneyValidation.validate_journey(journey, existing_journeys, assigned_titles)
 
     if not isValid:
-        return jsonify({'journeyFormValues': response}), 200
+        return jsonify({'journeyFormValues': response}), 400
 
     duration_days = int(journey['duration_days']['value'])
     
