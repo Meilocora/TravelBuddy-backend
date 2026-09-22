@@ -68,7 +68,7 @@ def add_media(current_user):
         db.session.add(new_medium)
         db.session.commit()
 
-        return jsonify({'status': 201})
+        return '', 201
     except Exception:
         db.session.rollback()
         return jsonify({'error': 'Internal server error'}), 500
@@ -146,7 +146,7 @@ def update_medium(current_user, mediumId):
         ))
         db.session.commit()
                 
-        return jsonify({'status': 200})
+        return '', 200
     except Exception:
         db.session.rollback()
         return jsonify({'error': 'Internal server error'}), 500
@@ -166,7 +166,7 @@ def delete_medium(current_user, mediumId):
         # Delete the medium from the database
         db.session.delete(medium)
         db.session.commit()
-        return jsonify({'status': 200})
+        return '', 200
     except Exception:
         db.session.rollback()
         return jsonify({'error': 'Internal server error'}), 500
@@ -190,7 +190,7 @@ def delete_medium(current_user, mediumId):
                     
 #         db.session.commit()
                 
-#         return jsonify({'status': 200}), 200
+        # return '', 200
 #     except Exception:
 #         db.session.rollback()
 #         return jsonify({'error': str(e)}), 500
@@ -236,7 +236,7 @@ def delete_media(current_user):
             db.session.delete(medium)
         db.session.commit()
 
-        return jsonify({'status': 200})
+        return '', 200
     except Exception:
         db.session.rollback()
         return jsonify({'error': 'Internal server error'}), 500

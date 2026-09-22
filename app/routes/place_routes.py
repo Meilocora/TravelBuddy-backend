@@ -216,7 +216,7 @@ def toggle_favorite_place(current_user, placeId):
         ))
         db.session.commit()
 
-        return jsonify({'status': 200}), 200
+        return '', 200
     except Exception:
         db.session.rollback()
         return jsonify({'error': 'Internal server error'}), 500
@@ -261,7 +261,7 @@ def toggle_visited_place(current_user, placeId):
         db.session.commit()
         
         
-        return jsonify({'status': 200})
+        return '', 200
     except Exception:
         db.session.rollback()
         return jsonify({'error': 'Internal server error'}), 500
@@ -297,7 +297,7 @@ def delete_place(current_user, placeId):
             custom_country.visited = False
         
         db.session.commit()
-        return jsonify({'status': 200})
+        return '', 200
     except Exception:
         db.session.rollback()
         return jsonify({'error': 'Internal server error'}), 500
@@ -322,7 +322,7 @@ def add_minor_stage_to_place(current_user, placeId, minorStageId):
             place.minor_stages.append(minor_stage)
             db.session.commit()
 
-        return jsonify({'status': 200})
+        return '', 200
     except Exception:
         db.session.rollback()
         return jsonify({'error': 'Internal server error'}), 500
@@ -345,7 +345,7 @@ def remove_minor_stage_from_place(current_user, placeId, minorStageId):
             place.minor_stages.remove(minor_stage)
             db.session.commit()
 
-        return jsonify({'status': 200})
+        return '', 200
     except Exception:
         db.session.rollback()
         return jsonify({'error': 'Internal server error'}), 500

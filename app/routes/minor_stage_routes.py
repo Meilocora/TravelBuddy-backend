@@ -317,7 +317,7 @@ def delete_minor_stage(current_user, minorStageId):
                 
         db.session.commit()
         
-        return jsonify({'status': 200})
+        return '', 200
     except Exception:
         db.session.rollback()
         return jsonify({'error': 'Internal server error'}), 500
@@ -379,7 +379,7 @@ def swap_minor_stages(current_user):
         recalculate_minor_stage_dates(major_stage)
         db.session.commit()
 
-        return jsonify({"status": 200}), 200
+        return '', 200
 
     except Exception:
         db.session.rollback()

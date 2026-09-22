@@ -242,7 +242,7 @@ def delete_journey(current_user, journeyId):
         # Delete the journey from the database
         db.session.delete(journey)
         db.session.commit()
-        return jsonify({'status': 200})
+        return '', 200
     except Exception:
         db.session.rollback()
         return jsonify({

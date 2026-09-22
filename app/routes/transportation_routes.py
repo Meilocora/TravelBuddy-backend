@@ -307,7 +307,7 @@ def delete_major_stage_transportation(current_user, majorStageId):
         
         calculate_journey_costs(journey_costs)
         
-        return jsonify({'status': 200}), 200
+        return '', 200
     except Exception:
         db.session.rollback()
         return jsonify({'error': 'Internal server error'}), 500

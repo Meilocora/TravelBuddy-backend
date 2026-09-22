@@ -206,4 +206,4 @@ def change_password(current_user):
     except Exception:
         return jsonify({'error': 'Internal server error'}), 500
     else:
-        return jsonify({'status': 200})
+        return '', 200

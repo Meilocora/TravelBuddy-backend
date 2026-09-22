@@ -5,8 +5,6 @@ from datetime import date, datetime
 class Validation:
   def __init__(self):
     self.error_list = []
-    # self.current_date_string = datetime.now().strftime('%Y-%m-%d')
-    #  TODO: Prüfen, ob die Änderungen so korrekt sind
     self.current_date_string = datetime.now().strftime(
         '%d.%m.%Y'
     )
@@ -29,12 +27,6 @@ class Validation:
     elif len(value.strip()) < min_length:
       self.error_list.append(f'Min length is {min_length}')
     
-    # try:
-      # if len(value.strip()) > max_length:
-        # self.error_list.append(f'Max length is {max_length}')
-    # except AttributeError:
-      # pass
-      
     return self.__return_feedback()
 
 
@@ -52,9 +44,7 @@ class Validation:
       self.error_list.append('Required format: DD.MM.YYYY HH:MM')
     else:
       if not min_date_time:
-        # TODO: Prüfen ob die Änderung funktioniert
         min_date_time = self.current_date_time_string
-        # min_date_time = self.current_date_string
         
       if datetime.strptime(value, '%d.%m.%Y %H:%M') < datetime.strptime(min_date_time, '%d.%m.%Y %H:%M'):
         self.error_list.append("Can't be earlier than now")
@@ -66,7 +56,6 @@ class Validation:
     try:
       datetime.strptime(value, '%d.%m.%Y')
     except (TypeError , ValueError):
-      # self.error_list.append('Wrong format')
       return self.__return_feedback()
     else:
       if not min_date:
@@ -106,7 +95,6 @@ class Validation:
     try:
       new_date = datetime.strptime(new_date, '%d.%m.%Y')
     except (TypeError , ValueError):
-      # self.error_list.append('Error with overlap check occured')
       return self.__return_feedback()
     else:
       if new_date >= existing_start_date and new_date <= existing_end_date:
@@ -175,8 +163,7 @@ class Validation:
 
       if superior_duration < inferior_duration_sum:
           self.error_list.append(
-              'Superior stage duration exceeded by '
-              'inferior stage durations'
+              'Superior stage duration exceeded'
           )
 
       return self.__return_feedback()

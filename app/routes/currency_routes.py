@@ -17,8 +17,11 @@ def create_currency(current_user):
         return jsonify({'error': 'Unknown error'}), 400 
         
     response, isValid = CurrencyValidation.validate_currency(currency=currency)
+    
+    print("Validation response:", response, "Is valid:", isValid)
+    
     if not isValid:
-        return jsonify({'currencyFormValues': response}), 200
+        return jsonify({'currencyFormValues': response}), 400
     
     try:
         # Create a new currency
@@ -33,7 +36,7 @@ def create_currency(current_user):
         db.session.add(new_currency)
         db.session.commit()
         
-        return jsonify({'status': 201})
+        return '', 201
     except Exception:
         db.session.rollback()
         return jsonify({
@@ -59,7 +62,7 @@ def update_currency(current_user, currencyId):
     response, isValid = CurrencyValidation.validate_currency(currency=currency)
     
     if not isValid:
-        return jsonify({'currencyFormValues': response}), 200
+        return jsonify({'currencyFormValues': response}), 400
         
     try:        
         # Update the currency
@@ -72,7 +75,7 @@ def update_currency(current_user, currencyId):
         ))
         db.session.commit()        
         
-        return jsonify({'status': 200})
+        return '', 200
     except Exception:
         db.session.rollback()
         return jsonify({
@@ -94,7 +97,7 @@ def delete_currency(current_user, currencyId):
         db.session.delete(currency_to_delete)
         db.session.commit()
         
-        return jsonify({'status': 200})
+        return '', 200
     except Exception:
         db.session.rollback()
         return jsonify({

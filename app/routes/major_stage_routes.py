@@ -14,7 +14,6 @@ from app.routes.util import (
     formatDateTimeToString,
     formatDateToString,
     get_users_stages_titles,
-    parseDate,
 )
 from app.validation.major_stage_validation import MajorStageValidation
 from db import db
@@ -49,7 +48,7 @@ def create_major_stage(current_user, journeyId):
         }), 500
     
     response, isValid = MajorStageValidation.validate_major_stage(major_stage, existing_major_stages, existing_major_stages_costs, journey_costs, assigned_titles, journey)
-    
+        
     if not isValid:
         return jsonify({'majorStageFormValues': response}), 400
 
@@ -117,6 +116,7 @@ def update_major_stage(current_user, journeyId, majorStageId):
     try:
         major_stage = request.get_json()
         minor_stages = db.session.execute(db.select(MinorStage).filter_by(major_stage_id=majorStageId)).scalars().all()
+        
         result = db.session.execute(db.select(MajorStage).filter(MajorStage.id != majorStageId, MajorStage.journey_id==journeyId))
         existing_major_stages = result.scalars().all()
         
@@ -256,7 +256,7 @@ def delete_major_stage(current_user, majorStageId):
         
         db.session.commit()
         
-        return jsonify({'status': 200})
+        return '', 200
     except Exception:
         db.session.rollback()
         return jsonify({
@@ -314,4 +314,4 @@ def swap_major_stages(current_user):
     recalculate_major_stage_dates(journey)
     db.session.commit()
 
-    return jsonify({'status': 200})
+    return '', 200
