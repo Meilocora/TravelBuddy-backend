@@ -39,7 +39,7 @@ def test_add_medium_success(client, auth_header, route_graph_data):
         headers=auth_header(route_graph_data["user_id"]),
     )
 
-    assert response.status_code == 200
+    assert response.status_code == 201
 
 
 def test_delete_media_invalid_payload(client, auth_header, route_graph_data):

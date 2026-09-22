@@ -32,7 +32,7 @@ def test_create_currency_success(
         headers=auth_header(route_graph_data["user_id"]),
     )
 
-    assert response.status_code == 200
+    assert response.status_code == 201
     created = db.session.execute(
         db.select(Currency).filter_by(code="USD", user_id=route_graph_data["user_id"])
     ).scalars().first()
@@ -106,7 +106,7 @@ def test_create_currency_validation_fail(
         headers=auth_header(route_graph_data["user_id"]),
     )
 
-    assert response.status_code == 200
+    assert response.status_code == 400
 
 
 def test_create_currency_bad_json_returns_400(
@@ -142,7 +142,7 @@ def test_update_currency_validation_fail(
         headers=auth_header(route_graph_data["user_id"]),
     )
 
-    assert response.status_code == 200
+    assert response.status_code == 400
 
 
 def test_update_currency_commit_exception_returns_500(

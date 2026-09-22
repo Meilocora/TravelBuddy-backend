@@ -17,9 +17,7 @@ def create_currency(current_user):
         return jsonify({'error': 'Unknown error'}), 400 
         
     response, isValid = CurrencyValidation.validate_currency(currency=currency)
-    
-    print("Validation response:", response, "Is valid:", isValid)
-    
+      
     if not isValid:
         return jsonify({'currencyFormValues': response}), 400
     

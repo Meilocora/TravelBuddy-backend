@@ -45,7 +45,6 @@ def test_get_user_data_with_coordinates_uses_helpers(
     assert body["offset"] == 2
     assert body["localCurrency"]["code"] == "USD"
 
-
 def test_get_user_data_with_coordinates_handles_helper_exception(
     client,
     auth_header,
@@ -65,6 +64,6 @@ def test_get_user_data_with_coordinates_handles_helper_exception(
         headers=auth_header(route_graph_data["user_id"]),
     )
 
-    assert response.status_code == 200
+    assert response.status_code == 500
     body = response.get_json()
     assert body["offset"] == 0

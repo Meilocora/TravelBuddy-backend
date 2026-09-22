@@ -192,8 +192,7 @@ def get_all_currencies(current_user):
                     })
         
         return currency_list
-    except Exception as e:
-        print(f"Error fetching currencies: {e}")
+    except Exception:
         return None
 
 
