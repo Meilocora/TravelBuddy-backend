@@ -52,10 +52,9 @@ def create_activity(current_user, minorStageId):
             minor_stage_id=minorStageId
         )
         db.session.add(new_activity)
-        db.session.commit()
         
         calculate_journey_costs(journey_costs)
-        
+        db.session.commit()
         # build response activity object for the frontend
         response_activity = {'id': new_activity.id,
                                 'name': new_activity.name,
@@ -118,11 +117,10 @@ def update_activity(current_user, minorStageId, activityId):
         old_activity.longitude = new_activity.get('longitude', {}).get('value', None)
         old_activity.link = new_activity['link']['value']
         old_activity.booked = new_activity['booked']['value']
-        db.session.commit()
-        
         
         calculate_journey_costs(journey_costs)
         
+        db.session.commit()
         # build response activity object for the frontend
         response_activity = {'id': old_activity.id,
                                     'name': new_activity['name']['value'],
@@ -165,9 +163,9 @@ def delete_activity(current_user, activityId):
     journey_costs = db.session.execute(db.select(Costs).filter_by(journey_id=journey.id)).scalars().first()
     try:        
         db.session.execute(db.delete(Activity).where(Activity.id == activityId))
-        db.session.commit()    
         
         calculate_journey_costs(journey_costs)
+        db.session.commit()    
         
         return jsonify({'backendJourneyId': journey.id}), 200
     except Exception:

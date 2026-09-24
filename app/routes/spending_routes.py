@@ -52,10 +52,9 @@ def create_spending(current_user, minorStageId):
             costs_id=minor_stage.costs.id
         )
         db.session.add(new_spending)
-        db.session.commit()
         
         calculate_journey_costs(journey_costs)
-        
+        db.session.commit()
         # build response spending object for the frontend
         response_spending = {'id': new_spending.id,
                                 'name': new_spending.name,
@@ -106,9 +105,9 @@ def update_spending(current_user, minorStageId, spendingId):
         old_spending.amount = new_spending['amount']['value']
         old_spending.date = parseDate(new_spending['date']['value'])
         old_spending.category = new_spending['category']['value']
-        db.session.commit()
         
         calculate_journey_costs(journey_costs)
+        db.session.commit()
         
         # build response spending object for the frontend
         response_spending = {'id': old_spending.id,
@@ -141,9 +140,9 @@ def delete_spending(current_user, spendingId):
     journey_costs = db.session.execute(db.select(Costs).filter_by(journey_id=journey.id)).scalars().first()
     try:        
         db.session.execute(db.delete(Spendings).where(Spendings.id == spendingId))
-        db.session.commit()    
         
         calculate_journey_costs(journey_costs)
+        db.session.commit()    
         
         return jsonify({'backendJourneyId': journey.id}), 200
     except Exception:

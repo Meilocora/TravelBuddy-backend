@@ -60,9 +60,9 @@ def create_major_stage_transportation(current_user, majorStageId):
             major_stage_id=majorStageId
         )
         db.session.add(new_transportation)
-        db.session.commit()
         
         calculate_journey_costs(journey_costs)
+        db.session.commit()
         
         # build response transportation object for the frontend
         response_transportation = {'id': new_transportation.id,
@@ -128,9 +128,9 @@ def create_minor_stage_transportation(current_user, minorStageId):
             minor_stage_id=minorStageId
         )
         db.session.add(new_transportation)
-        db.session.commit()
         
         calculate_journey_costs(journey_costs)
+        db.session.commit()
         
         # build response transportation object for the frontend
         response_transportation = {'id': new_transportation.id,
@@ -197,10 +197,9 @@ def update_major_stage_transportation(current_user, majorStageId, transportation
         old_transportation.arrival_longitude = new_transportation.get('arrival_longitude', {}).get('value', None)
         old_transportation.transportation_costs = new_transportation['transportation_costs']['value']
         old_transportation.link = new_transportation['link']['value']
-        db.session.commit()
         
         calculate_journey_costs(journey_costs)
-        
+        db.session.commit()
         # build response transportation object for the frontend
         response_transportation = {'id': old_transportation.id,
                                     'type': new_transportation['type']['value'],
@@ -264,10 +263,9 @@ def update_minor_stage_transportation(current_user, minorStageId, transportation
         old_transportation.arrival_longitude = new_transportation.get('arrival_longitude', {}).get('value', None)
         old_transportation.transportation_costs = new_transportation['transportation_costs']['value']
         old_transportation.link = new_transportation['link']['value']
-        db.session.commit()
-        
+                
         calculate_journey_costs(journey_costs)
-        
+        db.session.commit()
         # build response transportation object for the frontend
         response_transportation = {'id': old_transportation.id,
                                     'type': new_transportation['type']['value'],
@@ -303,10 +301,9 @@ def delete_major_stage_transportation(current_user, majorStageId):
     journey_costs = db.session.execute(db.select(Costs).filter_by(journey_id=journey.id)).scalars().first()
     try:        
         db.session.execute(db.delete(Transportation).where(Transportation.major_stage_id == majorStageId))
-        db.session.commit()    
         
         calculate_journey_costs(journey_costs)
-        
+        db.session.commit()    
         return '', 200
     except Exception:
         db.session.rollback()
@@ -328,9 +325,9 @@ def delete_minor_stage_transportation(current_user, minorStageId):
     journey_costs = db.session.execute(db.select(Costs).filter_by(journey_id=journey.id)).scalars().first()
     try:        
         db.session.execute(db.delete(Transportation).where(Transportation.minor_stage_id == minorStageId))
-        db.session.commit()    
         
         calculate_journey_costs(journey_costs)
+        db.session.commit()    
         
         return jsonify({ 'backendMajorStageId': major_stage.id}), 200
     except Exception:
