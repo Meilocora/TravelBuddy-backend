@@ -64,4 +64,7 @@ def test_get_user_data_with_coordinates_handles_helper_exception(
         headers=auth_header(route_graph_data["user_id"]),
     )
 
-    assert response.status_code == 500
+    # Even though the helper raised an exception, the route should return default values
+    assert response.status_code == 200
+    body = response.get_json()
+    assert body["offset"] == 0

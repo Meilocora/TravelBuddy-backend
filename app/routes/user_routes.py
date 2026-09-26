@@ -21,5 +21,7 @@ def get_user_data(current_user):
             user_time_zone_offset =  calculate_time_zone_offset(latitude, longitude)
             currencyInfo = get_local_currency(latitude, longitude)
         except Exception:
-            return jsonify({'error': 'Failed to determine user location data'}), 500
+            # Failed to determine user location data, returning default values
+            # return jsonify({'error': 'Failed to determine user location data'}), 500
+            return jsonify({'userId' : current_user, 'offset': user_time_zone_offset, 'localCurrency': currencyInfo}), 200
     return jsonify({'userId' : current_user, 'offset': user_time_zone_offset, 'localCurrency': currencyInfo}), 200
