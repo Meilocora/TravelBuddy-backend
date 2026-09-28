@@ -1,0 +1,29 @@
+services:
+  api:
+    build: .
+    ports:
+      - "5001:5001"
+    environment:
+      SECRET_KEY: ${SECRET_KEY:?Set SECRET_KEY in .env}
+      GOOGLE_API_KEY: ${GOOGLE_API_KEY:-}
+      SQLALCHEMY_DATABASE_URI: postgresql+psycopg2://travelbuddy:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}@db:5432/travelbuddy
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: travelbuddy
+      POSTGRES_USER: travelbuddy
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U travelbuddy -d travelbuddy"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  postgres_data:

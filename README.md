@@ -246,6 +246,48 @@ TravelBuddy-backend/
 
 ## Getting Started
 
+### Run locally with Docker Compose
+
+Install Docker Desktop (with the Docker Compose plugin), then run these commands
+from the repository root:
+
+```bash
+cp .env.example .env
+```
+
+In `.env`, replace `SECRET_KEY` with a long random value and set
+`POSTGRES_PASSWORD` to an alphanumeric password. Set `GOOGLE_API_KEY` if you
+use features that require it. Compose builds the database connection string
+itself; `SQLALCHEMY_DATABASE_URI` in `.env` is used only when running Python
+directly on your machine.
+
+For a new, empty local database only, create the tables once:
+
+```bash
+docker compose run --rm api python -c "from server import create_app; from db import db; app = create_app(); app.app_context().push(); db.create_all()"
+```
+
+Start the API and database:
+
+```bash
+docker compose up --build -d
+docker compose logs -f api
+```
+
+The API listens on http://localhost:5001. To stop the services, run
+`docker compose down`. The named PostgreSQL volume preserves your data.
+`docker compose down -v` also deletes that local database volume.
+`db.create_all()` creates missing tables but does not update existing tables.
+Apply schema migrations separately when the models change. This Compose setup
+uses a separate local database; it does not copy data from an existing database.
+The database is reachable by the API through the Compose hostname `db` and is
+not exposed to the host machine.
+
+For Expo running on a physical phone, configure the frontend API address to
+your computer's LAN address instead of `localhost`.
+
+### Run without Docker
+
 ### Prerequisites
 
 - Python 3.12+
