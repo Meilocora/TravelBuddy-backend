@@ -10,6 +10,11 @@ updates:
     commit-message:
       prefix: "chore(deps)"
     groups:
+      # All security fixes in a single PR
+      security:
+        applies-to: security-updates
+        patterns:
+          - "*"
       # Flask and Werkzeug must be upgraded together
       flask-stack:
         patterns:
@@ -29,6 +34,10 @@ updates:
         update-types:
           - "minor"
           - "patch"
+      # Major updates may contain breaking changes, review them together
+      major:
+        update-types:
+          - "major"
 
   - package-ecosystem: "github-actions"
     directory: "/"
@@ -36,6 +45,10 @@ updates:
       interval: "monthly"
     commit-message:
       prefix: "chore(ci)"
+    groups:
+      github-actions:
+        patterns:
+          - "*"
 
   - package-ecosystem: "docker"
     directory: "/"
