@@ -1,33 +1,64 @@
+"""
+Tests for the authentication endpoints (``/auth``).
+
+Covers login, registration, token refresh and account changes. The
+``app`` fixture aligns the module-level ``SECRET_KEY`` of ``auth_routes``
+with the test configuration, so issued and verified tokens match.
+"""
+
 import bcrypt
 import jwt
+from helpers import field, raise_error, stub_validation
 
 from app.models import User
 from db import db
 
-
-def _field(value):
-    return {"value": value, "errors": [], "isValid": True}
+AUTH_VALIDATION = "app.routes.auth_routes.AuthValidation"
 
 
-def test_login_user_success(client, app):
-    from app.routes import auth_routes
-
-    auth_routes.SECRET_KEY = app.config["SECRET_KEY"]
-
-    user = User(
-        username="login_user",
-        email="login@example.com",
-        password=bcrypt.hashpw("Secret123!".encode("utf-8"), bcrypt.gensalt()).decode("utf-8"),
-    )
+def _create_user(username, email, password="hash"):
+    """Persists a user; ``password`` is stored as given (hash it if needed)."""
+    user = User(username=username, email=email, password=password)
     db.session.add(user)
     db.session.commit()
+    return user
 
-    payload = {
-        "email": _field("login@example.com"),
-        "password": _field("Secret123!"),
+
+def _encode_token(app, user_id, token_type):
+    """Signs a token with the test secret; ``token_type`` is 'access' or 'refresh'."""
+    return jwt.encode(
+        {"user_id": user_id, "username": "test-user", "type": token_type},
+        app.config["SECRET_KEY"],
+        algorithm="HS256",
+    )
+
+
+def _sign_up_payload(username, email):
+    return {
+        "username": field(username),
+        "email": field(email),
+        "password": field("Secret123!"),
+        "passwordConfirm": field("Secret123!"),
     }
 
-    response = client.post("/auth/login-user", json=payload)
+
+# ---------------------------------------------------------------------------
+# POST /auth/login-user
+# ---------------------------------------------------------------------------
+
+
+def test_login_user_success(client):
+    """Correct credentials return an access token and a refresh token."""
+    hashed_password = bcrypt.hashpw(b"Secret123!", bcrypt.gensalt()).decode("utf-8")
+    _create_user("login_user", "login@example.com", hashed_password)
+
+    response = client.post(
+        "/auth/login-user",
+        json={
+            "email": field("login@example.com"),
+            "password": field("Secret123!"),
+        },
+    )
 
     assert response.status_code == 200
     body = response.get_json()
@@ -35,41 +66,146 @@ def test_login_user_success(client, app):
     assert "refreshToken" in body
 
 
-def test_create_user_success(client, app, monkeypatch):
-    from app.routes import auth_routes
-
-    auth_routes.SECRET_KEY = app.config["SECRET_KEY"]
-
-    payload = {
-        "username": _field("new_user"),
-        "email": _field("new_user@example.com"),
-        "password": _field("Secret123!"),
-        "passwordConfirm": _field("Secret123!"),
-    }
-
-    monkeypatch.setattr(
-        "app.routes.auth_routes.AuthValidation.validate_signUp",
-        lambda signUpData: (signUpData, True),
+def test_login_user_invalid_credentials(client):
+    """Login with an unknown email returns 401."""
+    response = client.post(
+        "/auth/login-user",
+        json={
+            "email": field("missing@example.com"),
+            "password": field("Secret123!"),
+        },
     )
 
-    response = client.post("/auth/create-user", json=payload)
+    assert response.status_code == 401
+
+
+# ---------------------------------------------------------------------------
+# POST /auth/create-user
+# ---------------------------------------------------------------------------
+
+
+def test_create_user_success(client, monkeypatch):
+    """A valid sign-up creates a new user."""
+    monkeypatch.setattr(f"{AUTH_VALIDATION}.validate_signUp", stub_validation(True))
+
+    response = client.post(
+        "/auth/create-user",
+        json=_sign_up_payload("new_user", "new_user@example.com"),
+    )
 
     assert response.status_code == 201
+    created = db.session.execute(
+        db.select(User).filter_by(email="new_user@example.com")
+    ).scalar_one_or_none()
+    assert created is not None
+
+
+def test_create_user_existing_user(client, monkeypatch):
+    """Signing up with an already registered username/email returns 400."""
+    _create_user("existing_user", "existing@example.com")
+    monkeypatch.setattr(f"{AUTH_VALIDATION}.validate_signUp", stub_validation(True))
+
+    response = client.post(
+        "/auth/create-user",
+        json=_sign_up_payload("existing_user", "existing@example.com"),
+    )
+
+    assert response.status_code == 400
+
+
+def test_create_user_validation_fail(client, monkeypatch):
+    """Invalid sign-up form values are rejected with 400."""
+    monkeypatch.setattr(f"{AUTH_VALIDATION}.validate_signUp", stub_validation(False))
+
+    response = client.post(
+        "/auth/create-user",
+        json={
+            "username": field(""),
+            "email": field("bad"),
+            "password": field("x"),
+            "passwordConfirm": field("y"),
+        },
+    )
+
+    assert response.status_code == 400
+
+
+# ---------------------------------------------------------------------------
+# POST /auth/refresh-token
+# ---------------------------------------------------------------------------
+
+
+def test_refresh_token_success(client, app):
+    """A valid refresh token yields a new access token."""
+    user = _create_user("refresh_user", "refresh@example.com")
+
+    response = client.post(
+        "/auth/refresh-token",
+        json={"refreshToken": _encode_token(app, user.id, "refresh")},
+    )
+
+    assert response.status_code == 200
+    assert "newToken" in response.get_json()
+
+
+def test_refresh_token_rejects_access_token(client, app):
+    """An access token must not be accepted as a refresh token."""
+    response = client.post(
+        "/auth/refresh-token",
+        json={"refreshToken": _encode_token(app, 1, "access")},
+    )
+
+    assert response.status_code == 401
+
+
+def test_refresh_token_user_not_found(client, app):
+    """A refresh token for a deleted/unknown user returns 404."""
+    response = client.post(
+        "/auth/refresh-token",
+        json={"refreshToken": _encode_token(app, 999999, "refresh")},
+    )
+
+    assert response.status_code == 404
+
+
+def test_refresh_token_malformed_token_returns_500(client):
+    """A token that cannot be decoded is reported as 500 by the current implementation."""
+    response = client.post(
+        "/auth/refresh-token",
+        json={"refreshToken": "not-a-jwt"},
+    )
+
+    assert response.status_code == 500
+
+
+# ---------------------------------------------------------------------------
+# GET /auth/get-user-infos
+# ---------------------------------------------------------------------------
+
+
+def test_get_user_infos_success(client, auth_header, route_graph_data):
+    """The authenticated user's profile data is returned."""
+    response = client.get(
+        "/auth/get-user-infos",
+        headers=auth_header(route_graph_data["user_id"]),
+    )
+
+    assert response.status_code == 200
+    assert "username" in response.get_json()
+
+
+# ---------------------------------------------------------------------------
+# POST /auth/change-username
+# ---------------------------------------------------------------------------
 
 
 def test_change_username_success(client, auth_header, route_graph_data, monkeypatch):
-    payload = {
-        "newUsername": _field("routes_user_renamed")
-    }
-
-    monkeypatch.setattr(
-        "app.routes.auth_routes.AuthValidation.validate_change_username",
-        lambda nameChangeData, currentUserData: (nameChangeData, True),
-    )
+    """A valid new username is stored and echoed back."""
+    monkeypatch.setattr(f"{AUTH_VALIDATION}.validate_change_username", stub_validation(True))
 
     response = client.post(
         "/auth/change-username",
-        json=payload,
+        json={"newUsername": field("routes_user_renamed")},
         headers=auth_header(route_graph_data["user_id"]),
     )
 
@@ -77,243 +213,84 @@ def test_change_username_success(client, auth_header, route_graph_data, monkeypa
     assert response.get_json()["newUsername"] == "routes_user_renamed"
 
 
-def test_refresh_token_success(client, app):
-    from app.routes import auth_routes
-
-    auth_routes.SECRET_KEY = app.config["SECRET_KEY"]
-
-    user = User(
-        username="refresh_user",
-        email="refresh@example.com",
-        password="hash",
-    )
-    db.session.add(user)
-    db.session.commit()
-
-    token = jwt.encode(
-        {
-            "user_id": user.id,
-            "username": user.username,
-            "type": "refresh",
-        },
-        app.config["SECRET_KEY"],
-        algorithm="HS256",
-    )
+def test_change_username_validation_fail(client, auth_header, route_graph_data, monkeypatch):
+    """An invalid new username is rejected with 400."""
+    monkeypatch.setattr(f"{AUTH_VALIDATION}.validate_change_username", stub_validation(False))
 
     response = client.post(
-        "/auth/refresh-token",
-        json={"refreshToken": token},
-    )
-
-    assert response.status_code == 200
-    assert "newToken" in response.get_json()
-
-
-def test_get_user_infos_success(client, auth_header, route_graph_data):
-    response = client.get(
-        "/auth/get-user-infos",
+        "/auth/change-username",
+        json={"newUsername": field("")},
         headers=auth_header(route_graph_data["user_id"]),
     )
 
-    assert response.status_code == 200
-    body = response.get_json()
-    assert "username" in body
+    assert response.status_code == 400
+
+
+def test_change_username_lookup_error_returns_400(client, auth_header, route_graph_data, monkeypatch):
+    """An unexpected error while loading the user returns 400."""
+    monkeypatch.setattr("app.routes.auth_routes.db.get_or_404", raise_error)
+
+    response = client.post(
+        "/auth/change-username",
+        json={"newUsername": field("x")},
+        headers=auth_header(route_graph_data["user_id"]),
+    )
+
+    assert response.status_code == 400
+
+
+# ---------------------------------------------------------------------------
+# POST /auth/change-password
+# ---------------------------------------------------------------------------
+
+
+def _change_password_payload(old="OldSecret1!", new="NewSecret1!", confirm="NewSecret1!"):
+    return {
+        "oldPassword": field(old),
+        "newPassword": field(new),
+        "newPasswordConfirm": field(confirm),
+    }
 
 
 def test_change_password_success(client, auth_header, route_graph_data, monkeypatch):
-    payload = {
-        "oldPassword": _field("OldSecret1!"),
-        "newPassword": _field("NewSecret1!"),
-        "newPasswordConfirm": _field("NewSecret1!"),
-    }
-
-    monkeypatch.setattr(
-        "app.routes.auth_routes.AuthValidation.validate_change_password",
-        lambda passwordChangeData, currentUserData: (passwordChangeData, True),
-    )
+    """A valid password change returns 200."""
+    monkeypatch.setattr(f"{AUTH_VALIDATION}.validate_change_password", stub_validation(True))
 
     response = client.post(
         "/auth/change-password",
-        json=payload,
+        json=_change_password_payload(),
         headers=auth_header(route_graph_data["user_id"]),
     )
 
     assert response.status_code == 200
 
 
-def test_login_user_invalid_credentials(client):
-    payload = {
-        "email": _field("missing@example.com"),
-        "password": _field("Secret123!"),
-    }
-
-    response = client.post("/auth/login-user", json=payload)
-
-    assert response.status_code == 401
-
-
-def test_create_user_existing_user(client, app, monkeypatch):
-    from app.routes import auth_routes
-
-    auth_routes.SECRET_KEY = app.config["SECRET_KEY"]
-
-    user = User(
-        username="existing_user",
-        email="existing@example.com",
-        password="hash",
-    )
-    db.session.add(user)
-    db.session.commit()
-
-    payload = {
-        "username": _field("existing_user"),
-        "email": _field("existing@example.com"),
-        "password": _field("Secret123!"),
-        "passwordConfirm": _field("Secret123!"),
-    }
-
-    monkeypatch.setattr(
-        "app.routes.auth_routes.AuthValidation.validate_signUp",
-        lambda signUpData: (signUpData, True),
-    )
-
-    response = client.post("/auth/create-user", json=payload)
-
-    assert response.status_code == 400
-
-
-def test_refresh_token_invalid_type(client, app):
-    from app.routes import auth_routes
-
-    auth_routes.SECRET_KEY = app.config["SECRET_KEY"]
-
-    token = jwt.encode(
-        {
-            "user_id": 1,
-            "username": "x",
-            "type": "access",
-        },
-        app.config["SECRET_KEY"],
-        algorithm="HS256",
-    )
-
-    response = client.post(
-        "/auth/refresh-token",
-        json={"refreshToken": token},
-    )
-
-    assert response.status_code == 401
-
-
-def test_refresh_token_user_not_found(client, app):
-    from app.routes import auth_routes
-
-    auth_routes.SECRET_KEY = app.config["SECRET_KEY"]
-
-    token = jwt.encode(
-        {
-            "user_id": 999999,
-            "username": "x",
-            "type": "refresh",
-        },
-        app.config["SECRET_KEY"],
-        algorithm="HS256",
-    )
-
-    response = client.post(
-        "/auth/refresh-token",
-        json={"refreshToken": token},
-    )
-
-    assert response.status_code == 404
-
-
-def test_change_username_validation_fail(client, auth_header, route_graph_data, monkeypatch):
-    payload = {
-        "newUsername": _field("")
-    }
-
-    monkeypatch.setattr(
-        "app.routes.auth_routes.AuthValidation.validate_change_username",
-        lambda nameChangeData, currentUserData: (nameChangeData, False),
-    )
-
-    response = client.post(
-        "/auth/change-username",
-        json=payload,
-        headers=auth_header(route_graph_data["user_id"]),
-    )
-
-    assert response.status_code == 400
-
-
-def test_register_validation_fail(client, monkeypatch):
-    payload = {
-        "username": _field(""),
-        "email": _field("bad"),
-        "password": _field("x"),
-        "passwordConfirm": _field("y"),
-    }
-
-    monkeypatch.setattr(
-        "app.routes.auth_routes.AuthValidation.validate_signUp",
-        lambda signUpData: (signUpData, False),
-    )
-    response = client.post("/auth/create-user", json=payload)
-    assert response.status_code == 400
-
-
-def test_refresh_token_exception_branch(client):
-    response = client.post(
-        "/auth/refresh-token",
-        json={"refreshToken": "not-a-jwt"},
-    )
-    assert response.status_code == 500
-
-
-def test_change_username_exception_branch(client, auth_header, route_graph_data, monkeypatch):
-    monkeypatch.setattr(
-        "app.routes.auth_routes.db.get_or_404",
-        lambda *args, **kwargs: (_ for _ in ()).throw(RuntimeError("boom")),
-    )
-    response = client.post(
-        "/auth/change-username",
-        json={"newUsername": _field("x")},
-        headers=auth_header(route_graph_data["user_id"]),
-    )
-    assert response.status_code == 400
-
-
 def test_change_password_validation_fail(client, auth_header, route_graph_data, monkeypatch):
-    payload = {
-        "oldPassword": _field("Old"),
-        "newPassword": _field("New"),
-        "newPasswordConfirm": _field("No"),
-    }
-    monkeypatch.setattr(
-        "app.routes.auth_routes.AuthValidation.validate_change_password",
-        lambda passwordChangeData, currentUserData: (passwordChangeData, False),
-    )
+    """An invalid password change is rejected with 400."""
+    monkeypatch.setattr(f"{AUTH_VALIDATION}.validate_change_password", stub_validation(False))
+
     response = client.post(
         "/auth/change-password",
-        json=payload,
+        json=_change_password_payload(confirm="Mismatch1!"),
         headers=auth_header(route_graph_data["user_id"]),
     )
+
     assert response.status_code == 400
 
 
-def test_change_password_exception_branch(client, auth_header, route_graph_data, monkeypatch):
-    class _BoomQuery:
-        def filter_by(self, **kwargs):
-            raise RuntimeError("boom")
+def test_change_password_lookup_error_returns_400(client, auth_header, route_graph_data, monkeypatch):
+    """An unexpected error while loading the user returns 400."""
 
-    monkeypatch.setattr(
-        "app.routes.auth_routes.User.query",
-        _BoomQuery(),
-    )
+    class _FailingQuery:
+        def filter_by(self, **kwargs):
+            raise RuntimeError("Simulated failure")
+
+    monkeypatch.setattr("app.routes.auth_routes.User.query", _FailingQuery())
+
     response = client.post(
         "/auth/change-password",
-        json={"currentPassword": _field("a"), "newPassword": _field("b"), "confirmPassword": _field("b")},
+        json=_change_password_payload(),
         headers=auth_header(route_graph_data["user_id"]),
     )
+
     assert response.status_code == 400

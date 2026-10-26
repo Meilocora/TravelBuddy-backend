@@ -1,3 +1,12 @@
+"""
+Unit tests for the ownership-aware lookup helpers in ``resource_access``.
+
+Each ``get_user_*`` helper must return the resource only if it belongs to the
+given user, directly or through its parent chain, and ``None`` otherwise.
+"""
+
+import pytest
+
 from app.routes.resource_access import (
     get_user_activity,
     get_user_journey,
@@ -6,75 +15,29 @@ from app.routes.resource_access import (
     get_user_minor_stage,
 )
 
-
-def test_user_can_access_own_journey(ownership_data):
-    journey = get_user_journey(
-        ownership_data["user_a_id"],
-        ownership_data["journey_a_id"],
-    )
-
-    assert journey is not None
-    assert journey.id == ownership_data["journey_a_id"]
+LOOKUPS = [
+    pytest.param(get_user_journey, "journey", id="journey"),
+    pytest.param(get_user_major_stage, "major", id="major_stage"),
+    pytest.param(get_user_minor_stage, "minor", id="minor_stage"),
+    pytest.param(get_user_activity, "activity", id="activity"),
+    pytest.param(get_user_medium, "medium", id="medium"),
+]
 
 
-def test_user_cannot_access_foreign_journey(ownership_data):
-    journey = get_user_journey(
-        ownership_data["user_a_id"],
-        ownership_data["journey_b_id"],
-    )
+@pytest.mark.parametrize(("lookup", "resource"), LOOKUPS)
+def test_user_can_access_own_resource(ownership_data, lookup, resource):
+    """User A can load their own resource."""
+    resource_id = ownership_data[f"{resource}_a_id"]
 
-    assert journey is None
+    result = lookup(ownership_data["user_a_id"], resource_id)
 
-
-def test_user_cannot_access_foreign_major_stage(ownership_data):
-    stage = get_user_major_stage(
-        ownership_data["user_a_id"],
-        ownership_data["major_b_id"],
-    )
-
-    assert stage is None
+    assert result is not None
+    assert result.id == resource_id
 
 
-def test_user_cannot_access_foreign_minor_stage(ownership_data):
-    stage = get_user_minor_stage(
-        ownership_data["user_a_id"],
-        ownership_data["minor_b_id"],
-    )
+@pytest.mark.parametrize(("lookup", "resource"), LOOKUPS)
+def test_user_cannot_access_foreign_resource(ownership_data, lookup, resource):
+    """User A gets ``None`` for the corresponding resource of User B."""
+    result = lookup(ownership_data["user_a_id"], ownership_data[f"{resource}_b_id"])
 
-    assert stage is None
-
-
-def test_user_can_access_own_nested_activity(ownership_data):
-    activity = get_user_activity(
-        ownership_data["user_a_id"],
-        ownership_data["activity_a_id"],
-    )
-
-    assert activity is not None
-
-
-def test_user_cannot_access_foreign_nested_activity(ownership_data):
-    activity = get_user_activity(
-        ownership_data["user_a_id"],
-        ownership_data["activity_b_id"],
-    )
-
-    assert activity is None
-
-
-def test_user_can_access_own_medium(ownership_data):
-    medium = get_user_medium(
-        ownership_data["user_a_id"],
-        ownership_data["medium_a_id"],
-    )
-
-    assert medium is not None
-
-
-def test_user_cannot_access_foreign_medium(ownership_data):
-    medium = get_user_medium(
-        ownership_data["user_a_id"],
-        ownership_data["medium_b_id"],
-    )
-
-    assert medium is None
+    assert result is None
