@@ -74,7 +74,8 @@ def calculate_major_stage_costs(major_stage_costs):
     for minor_stage in minor_stages:
         minor_stage_costs = db.session.execute(db.select(Costs).filter_by(minor_stage_id=minor_stage.id)).scalars().first()
         updated_minor_stage_costs = calculate_minor_stage_costs(minor_stage_costs)
-        spent_money += updated_minor_stage_costs.spent_money
+        if isinstance(updated_minor_stage_costs, Costs):
+            spent_money += updated_minor_stage_costs.spent_money
   
     major_stage_costs.spent_money = spent_money
     major_stage_costs.money_exceeded = major_stage_costs.spent_money > major_stage_costs.budget
@@ -87,8 +88,9 @@ def calculate_journey_costs(journey_costs):
     major_stages = db.session.execute(db.select(MajorStage).filter_by(journey_id=journey_costs.journey_id)).scalars().all()
     for major_stage in major_stages:
         major_stage_costs = db.session.execute(db.select(Costs).filter_by(major_stage_id=major_stage.id)).scalars().first()
-        updated_major_stage_cost = calculate_major_stage_costs(major_stage_costs)        
-        spent_money += updated_major_stage_cost.spent_money
+        updated_major_stage_cost = calculate_major_stage_costs(major_stage_costs)   
+        if isinstance(updated_major_stage_cost, Costs):     
+            spent_money += updated_major_stage_cost.spent_money
   
     journey_costs.spent_money = spent_money
     journey_costs.money_exceeded = journey_costs.spent_money > journey_costs.budget
@@ -116,6 +118,7 @@ def get_local_currency(lat, lng):
     # Get country name by reverse geocoding
     geolocator = Nominatim(user_agent="travelbuddy")
     location = geolocator.reverse((lat, lng), language='en')
+    
     if not location or 'country' not in location.raw['address']:
         return None
 

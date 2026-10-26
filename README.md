@@ -35,18 +35,20 @@ The mobile client communicates with the backend through JSON-based REST endpoint
 
 ## Tech Stack
 
-| Area                | Technology                  |
-| ------------------- | --------------------------- |
-| **Language**        | Python                      |
-| **Web Framework**   | Flask                       |
-| **ORM**             | SQLAlchemy                  |
-| **API**             | REST / JSON                 |
-| **Authentication**  | JWT access & refresh tokens |
-| **Database**        | Relational database         |
-| **Testing**         | pytest, pytest-cov          |
-| **Static Analysis** | Ruff                        |
-| **CI**              | GitHub Actions              |
-| **Configuration**   | python-dotenv               |
+| Area                | Technology                                         |
+| ------------------- | -------------------------------------------------- |
+| **Language**        | Python 3.12                                        |
+| **Web Framework**   | Flask                                              |
+| **ORM**             | SQLAlchemy 2 / Flask-SQLAlchemy                    |
+| **API**             | REST / JSON                                        |
+| **Authentication**  | JWT access & refresh tokens (PyJWT), bcrypt        |
+| **Database**        | PostgreSQL (Docker), SQLite (tests)                |
+| **Geo & Currency**  | geopy, timezonefinder, countryinfo, CurrencyConverter |
+| **Testing**         | pytest, pytest-cov                                 |
+| **Static Analysis** | Ruff                                               |
+| **CI**              | GitHub Actions                                     |
+| **Deployment**      | Docker, Docker Compose, Gunicorn                   |
+| **Configuration**   | python-dotenv                                      |
 
 ---
 
@@ -157,7 +159,37 @@ Foreign resources are treated as unavailable rather than exposing whether an obj
 
 ## Testing
 
-The backend uses **pytest** for automated testing.
+The backend uses **pytest** for automated testing. The suite exercises every
+blueprint through Flask's test client, including success paths, validation
+failures, missing resources and database errors.
+
+Each test runs against its own **in-memory SQLite database**, so tests are
+isolated from each other and never touch a development or production database.
+
+### Test structure
+
+| File                              | Purpose                                                          |
+| --------------------------------- | ---------------------------------------------------------------- |
+| `tests/conftest.py`               | App, client and auth fixtures, plus shared test data             |
+| `tests/helpers.py`                | `field()`, `raise_error()` and `stub_validation()` helpers       |
+| `tests/test_<resource>_routes.py` | Endpoint tests per blueprint, grouped by endpoint                |
+| `tests/test_resource_access.py`   | Unit tests for the ownership-aware lookup helpers                |
+| `tests/test_authorization.py`     | Ownership checks for delete endpoints                            |
+| `tests/test_security_regressions.py` | Regression tests for cross-account access                     |
+
+Two fixtures provide test data:
+
+- `route_graph_data` – one user with a fully populated journey (stages, costs,
+  country, place, activity, spending, transportation, medium, currency)
+- `ownership_data` – two users with identical resource trees, used to verify
+  that one user cannot access the other user's data
+
+Validators are stubbed with `stub_validation()` where a test targets route
+behavior rather than validation rules. Known bugs are documented with
+`pytest.mark.xfail(strict=True)`, so the test starts failing as a reminder
+once the bug is fixed.
+
+### Authorization regression tests
 
 A particular focus is placed on authorization and ownership boundaries.
 
@@ -170,8 +202,6 @@ Regression tests cover scenarios such as:
 - creating places for foreign countries
 - modifying child objects through unrelated parent resources
 - preventing updates to one journey from affecting another journey
-
-Tests run against an isolated test database so that the production or development database is not modified.
 
 ### Run all tests
 
@@ -215,31 +245,31 @@ This ensures that code quality checks and tests also pass in a clean environment
 TravelBuddy-backend/
 ├── app/
 │   ├── routes/
-│   │   ├── activity_routes.py
-│   │   ├── auth_routes.py
-│   │   ├── country_routes.py
-│   │   ├── currency_routes.py
-│   │   ├── journey_routes.py
-│   │   ├── major_stage_routes.py
-│   │   ├── medium_routes.py
-│   │   ├── minor_stage_routes.py
-│   │   ├── place_routes.py
-│   │   ├── spending_routes.py
-│   │   ├── transportation_routes.py
-│   │   ├── user_routes.py
-│   │   └── resource_access.py
+│   │   ├── *_routes.py           # One Flask blueprint per resource
+│   │   ├── resource_access.py    # Ownership-aware lookups (get_user_*)
+│   │   ├── route_protection.py   # @token_required decorator (JWT check)
+│   │   ├── db_util.py            # Shared queries, stage ordering and date recalculation
+│   │   └── util.py               # Date parsing, cost calculation, geo and currency helpers
 │   │
-│   ├── validation/
-│   └── models.py
+│   ├── validation/               # Form validation per resource
+│   └── models.py                 # SQLAlchemy models
 │
 ├── tests/
+│   ├── conftest.py               # Fixtures and shared test data
+│   ├── helpers.py                # Test helpers
+│   └── test_*.py
+│
 ├── .github/
-│   └── workflows/
+│   └── workflows/tests.yml       # Ruff + pytest CI
 ├── .env.example
-├── db.py
+├── db.py                         # SQLAlchemy instance
+├── server.py                     # App factory (create_app) and dev server
+├── Dockerfile
+├── docker-compose.yml
+├── Procfile                      # Gunicorn start command for PaaS hosting
 ├── requirements.txt
 ├── requirements-dev.txt
-└── server.py
+└── LICENSE
 ```
 
 ---
@@ -278,7 +308,8 @@ The API listens on http://localhost:5001. To stop the services, run
 `docker compose down`. The named PostgreSQL volume preserves your data.
 `docker compose down -v` also deletes that local database volume.
 `db.create_all()` creates missing tables but does not update existing tables.
-Apply schema migrations separately when the models change. This Compose setup
+No migration tool is configured yet, so schema changes to existing tables must
+be applied manually when the models change. This Compose setup
 uses a separate local database; it does not copy data from an existing database.
 The database is reachable by the API through the Compose hostname `db` and is
 not exposed to the host machine.
@@ -288,20 +319,20 @@ your computer's LAN address instead of `localhost`.
 
 ### Run without Docker
 
-### Prerequisites
+#### Prerequisites
 
 - Python 3.12+
 - pip
-- A supported relational database
+- A database supported by SQLAlchemy (e.g. PostgreSQL, or SQLite for quick local tests)
 
-### Clone the repository
+#### Clone the repository
 
 ```bash
 git clone https://github.com/Meilocora/TravelBuddy-backend.git
 cd TravelBuddy-backend
 ```
 
-### Create a virtual environment
+#### Create a virtual environment
 
 ```bash
 python -m venv venv
@@ -319,7 +350,7 @@ macOS / Linux:
 source venv/bin/activate
 ```
 
-### Install dependencies
+#### Install dependencies
 
 ```bash
 pip install -r requirements.txt
@@ -331,7 +362,7 @@ For development, testing and linting:
 pip install -r requirements-dev.txt
 ```
 
-### Environment Configuration
+#### Environment configuration
 
 Create a local `.env` file based on the provided example:
 
@@ -352,13 +383,20 @@ PORT=5001
 
 Secrets and credentials are intentionally excluded from version control.
 
-### Run the backend
+#### Run the backend
 
 ```bash
 python server.py
 ```
 
-The API will then be available using the configured host and port.
+The API will then be available using the configured host and port. On startup,
+`server.py` creates missing database tables automatically.
+
+For a production-like run, use Gunicorn (as in the `Dockerfile` and `Procfile`):
+
+```bash
+gunicorn --bind 0.0.0.0:5001 "server:create_app()"
+```
 
 ---
 
@@ -372,6 +410,8 @@ The API will then be available using the configured host and port.
 - Authorization behavior is covered by automated regression tests.
 
 ---
+
+## Project Status
 
 TravelBuddy is a personal full-stack portfolio project focused on building and refining a realistic mobile application architecture.
 
@@ -394,3 +434,9 @@ The project is not currently operated as a production commercial service.
 The React Native / Expo mobile application is available here:
 
 **[TravelBuddy Frontend](https://github.com/Meilocora/TravelBuddy-frontend)**
+
+---
+
+## License
+
+This project is licensed under the [MIT License](LICENSE).

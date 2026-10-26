@@ -1,5 +1,13 @@
 import re
 from datetime import date, datetime
+from typing import Any, TypedDict
+
+
+class FormField(TypedDict):
+  """A single form value as sent by the frontend."""
+  value: Any
+  errors: list[str]
+  isValid: bool
 
 
 class Validation:
@@ -21,23 +29,25 @@ class Validation:
       return ', '.join(self.error_list)
   
   
-  def validate_string(self, value: str, min_length: int = 1, max_length: int = 250) -> bool | None:    
+  def validate_string(self, value: str, min_length: int = 1, max_length: int = 250) -> bool | None | str:    
     if not value:
       return self.__return_feedback()
     elif len(value.strip()) < min_length:
       self.error_list.append(f'Min length is {min_length}')
+    elif len(value.strip()) > max_length:
+      self.error_list.append(f'Max length is {min_length}')
     
     return self.__return_feedback()
 
 
-  def validate_title(self, title: str, assigned_titles: list) -> bool | None:
+  def validate_title(self, title: str, assigned_titles: list) -> bool | None | str:
     if title in assigned_titles:
       self.error_list.append('Stage title already assigned')
       
     return self.__return_feedback()
     
     
-  def validate_date_time(self, value: str, min_date_time: str = None) -> bool | None:
+  def validate_date_time(self, value: str, min_date_time: str | None = None) -> bool | None | str:
     try:
       datetime.strptime(value, '%d.%m.%Y %H:%M')
     except (TypeError , ValueError):
@@ -52,7 +62,7 @@ class Validation:
     return self.__return_feedback()
     
   
-  def validate_date(self, value: str, min_date: str = None) -> bool | None:
+  def validate_date(self, value: str, min_date: str | None = None) -> bool | None | str:
     try:
       datetime.strptime(value, '%d.%m.%Y')
     except (TypeError , ValueError):
@@ -66,7 +76,7 @@ class Validation:
     return self.__return_feedback()
   
   
-  def compare_date_times(self, start_date_time: str, end_date_time: str) -> bool | str:      
+  def compare_date_times(self, start_date_time: str, end_date_time: str) -> bool | None |str:      
       try:
         datetime.strptime(start_date_time, '%d.%m.%Y %H:%M')
         datetime.strptime(end_date_time, '%d.%m.%Y %H:%M')
@@ -78,7 +88,7 @@ class Validation:
           
         return self.__return_feedback()
       
-  def compare_dates(self, start_date: str, end_date: str) -> bool | str:
+  def compare_dates(self, start_date: str, end_date: str) -> bool | None | str:
     try:
       datetime.strptime(start_date, '%d.%m.%Y')
       datetime.strptime(end_date, '%d.%m.%Y')
@@ -91,24 +101,24 @@ class Validation:
       return self.__return_feedback()
     
     
-  def check_for_overlap(self, new_date: str, existing_start_date: date, existing_end_date: date, overlap_superior_name: str) -> bool:
+  def check_for_overlap(self, new_date: str, existing_start_date: date, existing_end_date: date, overlap_superior_name: str) -> bool | None | str:
     try:
-      new_date = datetime.strptime(new_date, '%d.%m.%Y')
+      new_date_datetime = datetime.strptime(new_date, '%d.%m.%Y')
     except (TypeError , ValueError):
       return self.__return_feedback()
     else:
-      if new_date >= existing_start_date and new_date <= existing_end_date:
+      if new_date_datetime >= existing_start_date and new_date_datetime <= existing_end_date:
         self.error_list.append(f'Overlaps with "{overlap_superior_name}"')
     return self.__return_feedback()
 
 
-  def check_for_inferior_collision(self, new_date: str, inferior_start_date: date, inferior_end_date: date, inferior_name: str) -> bool:
+  def check_for_inferior_collision(self, new_date: str, inferior_start_date: date, inferior_end_date: date, inferior_name: str) -> bool | None | str:
     try:
-      new_date = datetime.strptime(new_date, '%d.%m.%Y')
+      new_date_datetime = datetime.strptime(new_date, '%d.%m.%Y')
     except (TypeError , ValueError):
       self.error_list.append('Error with inferior collision check occured')
     else:
-      if new_date > inferior_start_date and new_date < inferior_end_date:
+      if new_date_datetime > inferior_start_date and new_date_datetime < inferior_end_date:
         self.error_list.append(f'Collides with "{inferior_name}"')
     return self.__return_feedback()
 
@@ -220,12 +230,11 @@ class Validation:
     return self.__return_feedback()
 
 
-  def validate_coordinates(self, latitude:str, longitude:str):
+  def validate_coordinates(self, latitude: FormField, longitude: FormField) -> bool | str | None:
     try:
         float(latitude['value'])
         float(longitude['value'])
     except (TypeError, ValueError, KeyError):
         self.error_list.append('No location picked')
-        
-        return self.__return_feedback()
+
     return self.__return_feedback()
